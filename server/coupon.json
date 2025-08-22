@@ -1,0 +1,223 @@
+{
+  "info": {
+    "name": "Coupon API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin Endpoints",
+      "item": [
+        {
+          "name": "Create Coupon (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME20\",\n  \"discountType\": \"percent\",\n  \"discountValue\": 20,\n  \"expiryDate\": \"2024-12-31\",\n  \"minBookingValue\": 1000,\n  \"isGlobal\": true,\n  \"usageLimit\": 100\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/add-coupons",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "add-coupons"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Coupons (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/all-coupons?status=active",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "all-coupons"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Coupon (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minBookingValue\": 1500\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/update-coupons/{{coupon_id}}",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "update-coupons", "{{coupon_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Coupon (Soft - Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/delete-coupons/{{coupon_id}}",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "delete-coupons", "{{coupon_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Endpoints",
+      "item": [
+        {
+          "name": "Apply Coupon (User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME20\",\n  \"bookingValue\": 2000\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/coupons/apply",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "coupons", "apply"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Coupon as Used (User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME20\",\n  \"bookingValue\": 2000\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/coupons/mark-used",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "coupons", "mark-used"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Coupons (User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/coupon/coupons/available?bookingValue=2000",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "coupon", "coupons", "available"],
+              "query": [
+                {
+                  "key": "bookingValue",
+                  "value": "2000"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "your_user_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "coupon_id",
+      "value": "your_coupon_id_here",
+      "type": "string"
+    }
+  ]
+}

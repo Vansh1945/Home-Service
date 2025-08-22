@@ -1,0 +1,372 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+    "name": "Raj Electrical Service - Booking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"userpassword\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"user_token\", jsonData.token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"provider@example.com\",\n  \"password\": \"providerpassword\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/provider/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "provider", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"provider_token\", jsonData.token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpassword\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/admin/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "admin", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"admin_token\", jsonData.token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Booking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": \"60d21b4667d0d8992e610c85\",\n  \"date\": \"2023-12-15\",\n  \"time\": \"14:30\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"zipCode\": \"400001\",\n    \"coordinates\": [72.8777, 19.0760]\n  },\n  \"couponCode\": \"WELCOME10\",\n  \"notes\": \"Please bring extra tools\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/booking",
+          "host": ["{{base_url}}"],
+          "path": ["booking"]
+        }
+      }
+    },
+    {
+      "name": "Get User Bookings",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/user?status=pending",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "user"],
+          "query": [
+            {
+              "key": "status",
+              "value": "pending"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Single Booking",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/user/60d21b4667d0d8992e610c85",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "user", "60d21b4667d0d8992e610c85"]
+        }
+      }
+    },
+    {
+      "name": "Cancel Booking",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/user/60d21b4667d0d8992e610c85/cancel",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "user", "60d21b4667d0d8992e610c85", "cancel"]
+        }
+      }
+    },
+    {
+      "name": "Get Provider Bookings",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{provider_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/provider?status=pending",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "provider"],
+          "query": [
+            {
+              "key": "status",
+              "value": "pending"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Accept Booking",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{provider_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"time\": \"15:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/booking/provider/60d21b4667d0d8992e610c85/accept",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "provider", "60d21b4667d0d8992e610c85", "accept"]
+        }
+      }
+    },
+    {
+      "name": "Complete Booking",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{provider_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/provider/60d21b4667d0d8992e610c85/complete",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "provider", "60d21b4667d0d8992e610c85", "complete"]
+        }
+      }
+    },
+    {
+      "name": "Get All Bookings (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/admin?from=2023-01-01&to=2023-12-31",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "admin"],
+          "query": [
+            {
+              "key": "from",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "to",
+              "value": "2023-12-31"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Booking Details (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/admin/60d21b4667d0d8992e610c85",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "admin", "60d21b4667d0d8992e610c85"]
+        }
+      }
+    },
+    {
+      "name": "Assign Provider to Booking",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerId\": \"60d21b4667d0d8992e610c86\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/booking/admin/60d21b4667d0d8992e610c85/assign",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "admin", "60d21b4667d0d8992e610c85", "assign"]
+        }
+      }
+    },
+    {
+      "name": "Delete Booking (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/booking/admin/60d21b4667d0d8992e610c85",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "admin", "60d21b4667d0d8992e610c85"]
+        }
+      }
+    },
+    {
+      "name": "Delete User Booking (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"remark\": \"Duplicate booking\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/booking/admin/user/60d21b4667d0d8992e610c85/booking/60d21b4667d0d8992e610c86",
+          "host": ["{{base_url}}"],
+          "path": ["booking", "admin", "user", "60d21b4667d0d8992e610c85", "booking", "60d21b4667d0d8992e610c86"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    }
+  ]
+}

@@ -1,0 +1,505 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-f1g2-h3i4j5k6l7m8",
+    "name": "Provider API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Registration Initiate",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"testprovider@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/register/initiate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "register",
+            "initiate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Registration Complete",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"testprovider@example.com\",\n    \"otp\": \"123456\",\n    \"password\": \"Test@1234\",\n    \"name\": \"Test Provider\",\n    \"phone\": \"9876543210\",\n    \"dateOfBirth\": \"1990-01-01\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/register/complete",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "register",
+            "complete"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Complete Profile (With Auth)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "services",
+              "value": "[\"Plumbing\", \"Electrical\"]",
+              "type": "text"
+            },
+            {
+              "key": "experience",
+              "value": "5",
+              "type": "text"
+            },
+            {
+              "key": "serviceArea",
+              "value": "[\"City1\", \"City2\"]",
+              "type": "text"
+            },
+            {
+              "key": "street",
+              "value": "123 Test St",
+              "type": "text"
+            },
+            {
+              "key": "city",
+              "value": "Test City",
+              "type": "text"
+            },
+            {
+              "key": "state",
+              "value": "Test State",
+              "type": "text"
+            },
+            {
+              "key": "postalCode",
+              "value": "123456",
+              "type": "text"
+            },
+            {
+              "key": "accountNo",
+              "value": "1234567890",
+              "type": "text"
+            },
+            {
+              "key": "ifsc",
+              "value": "TEST0001234",
+              "type": "text"
+            },
+            {
+              "key": "profilePic",
+              "type": "file",
+              "src": "/path/to/profile.jpg"
+            },
+            {
+              "key": "resume",
+              "type": "file",
+              "src": "/path/to/resume.pdf"
+            },
+            {
+              "key": "passbookImage",
+              "type": "file",
+              "src": "/path/to/passbook.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/complete",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "complete"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Update Basic Info",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Updated Name\",\n    \"phone\": \"9876543210\",\n    \"dateOfBirth\": \"1990-01-01\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Update Professional Info",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"services\": [\"Plumbing\", \"Electrical\", \"Carpentry\"],\n    \"experience\": \"7\",\n    \"serviceArea\": [\"City1\", \"City2\", \"City3\"]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/professional",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "professional"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Update Address",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"street\": \"456 New Street\",\n    \"city\": \"New City\",\n    \"state\": \"New State\",\n    \"postalCode\": \"654321\",\n    \"country\": \"India\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/address",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "address"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Update Bank Details",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "accountNo",
+              "value": "9876543210",
+              "type": "text"
+            },
+            {
+              "key": "ifsc",
+              "value": "NEWB0001234",
+              "type": "text"
+            },
+            {
+              "key": "passbookImage",
+              "type": "file",
+              "src": "/path/to/new-passbook.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/bank",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "bank"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Update Profile Picture",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "profilePic",
+              "type": "file",
+              "src": "/path/to/new-profile.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/picture",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "picture"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. Update Resume",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "resume",
+              "type": "file",
+              "src": "/path/to/new-resume.pdf"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile/resume",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile",
+            "resume"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11. Delete Account",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/provider/profile",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12. Permanent Delete (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/provider/1234567890abcdef12345678/permanent",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "provider",
+            "1234567890abcdef12345678",
+            "permanent"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    }
+  ]
+}
