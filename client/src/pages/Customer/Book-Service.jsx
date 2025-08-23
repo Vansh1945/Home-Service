@@ -5,7 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaArrowLeft, FaCheckCircle, FaPlus, FaMinus, FaMapMarkerAlt, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaPlus, FaMinus, FaMapMarkerAlt, FaTag, FaClock, FaCalendarAlt } from 'react-icons/fa';
 
 const BookService = () => {
   const { serviceId } = useParams();
@@ -38,6 +38,21 @@ const BookService = () => {
     couponCode: '',
     appliedCoupon: null
   });
+
+  // Get next 3 days from today for date picker
+  const getNext3Days = () => {
+    const today = new Date();
+    const next3Days = [];
+    for (let i = 0; i < 3; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      next3Days.push(date);
+    }
+    return next3Days;
+  };
+
+  const availableDates = getNext3Days();
+  const maxDate = availableDates[availableDates.length - 1];
 
   // Generate time slots from current hour to 8 PM for today, or 8 AM to 8 PM for future dates
   const generateTimeSlots = () => {
@@ -309,9 +324,9 @@ const BookService = () => {
       toast.error('Service information is not loaded');
       return false;
     }
-
-    if (!formData.date) {
-      toast.error('Please select a date');
+    
+    if (!formData.date || formData.date < new Date().setHours(0,0,0,0) || formData.date > maxDate) {
+      toast.error('Please select a valid date within the next 3 days');
       return false;
     }
 
@@ -341,31 +356,6 @@ const BookService = () => {
     return true;
   };
 
-  // Show booking confirmation dialog
-  const showBookingConfirmation = () => {
-    const baseAmount = service.basePrice * formData.quantity;
-    const discountAmount = calculateDiscount();
-    const totalAmount = calculateTotal();
-    
-    const confirmationMessage = `
-      Please confirm your booking details:
-      
-      Service: ${service.title}
-      Date: ${formData.date.toLocaleDateString()}
-      Time: ${formData.time || 'To be confirmed'}
-      Quantity: ${formData.quantity}
-      ${formData.appliedCoupon ? `Coupon: ${formData.appliedCoupon.code} (-₹${discountAmount.toFixed(2)})` : ''}
-      
-      Total Amount: ₹${totalAmount.toFixed(2)}
-      
-      Do you want to proceed with this booking?
-    `;
-
-    if (window.confirm(confirmationMessage)) {
-      handleSubmit();
-    }
-  };
-
   // Handle form submission
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -373,13 +363,7 @@ const BookService = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    const toastId = toast.loading('Creating your booking...', {
-      position: "top-center",
-      style: {
-        background: '#3B82F6',
-        color: 'white',
-      }
-    });
+    const toastId = toast.loading('Creating your booking...');
 
     try {
       // Prepare address data
@@ -455,37 +439,93 @@ const BookService = () => {
       }
 
       toast.update(toastId, {
-        render: '✅ Booking created successfully! Redirecting to payment...',
+        render: 'Booking created successfully! Redirecting to payment...',
         type: 'success',
         isLoading: false,
-        autoClose: 2000,
-        closeButton: true,
-        style: {
-          background: '#10B981',
-          color: 'white',
-        }
+        autoClose: 2000
       });
 
-      // Enhanced navigation with better data structure
-      setTimeout(() => {
-        navigate(`/customer/booking-confirm/${bookingId}`, {
-          state: {
-            booking: {
-              ...response.data.data,
-              _id: bookingId,
-              service: service,
-              couponApplied: formData.appliedCoupon,
-              subtotal: baseAmount,
-              totalDiscount: discountAmount,
-              totalAmount: totalAmount,
-              paymentStatus: 'pending',
-              status: 'pending'
-            },
-            service: service,
-            fromBookingPage: true,
-            timestamp: Date.now()
-          }
+      // Enhanced navigation with better data structure and validation
+      console.log('Booking created successfully, preparing navigation...');
+      console.log('BookingId received:', bookingId);
+      console.log('Response data:', response.data);
+
+      // Validate bookingId before navigation
+      if (!bookingId || bookingId === 'undefined' || bookingId === 'null') {
+        console.error('Invalid booking ID received:', bookingId);
+        toast.update(toastId, {
+          render: 'Booking created but navigation failed. Please check your bookings page.',
+          type: 'warning',
+          isLoading: false,
+          autoClose: 5000
         });
+        
+        // Fallback navigation to bookings page
+        setTimeout(() => {
+          navigate('/customer/bookings', {
+            state: {
+              message: 'Booking created successfully! Please find your booking in the list below.',
+              showRefresh: true
+            }
+          });
+        }, 2000);
+        return;
+      }
+
+      // Prepare comprehensive booking data for navigation
+      const navigationBookingData = {
+        ...response.data.data,
+        _id: bookingId,
+        service: service,
+        couponApplied: formData.appliedCoupon,
+        subtotal: baseAmount,
+        totalDiscount: discountAmount,
+        totalAmount: totalAmount,
+        paymentStatus: 'pending',
+        status: 'pending',
+        // Ensure all required fields are present
+        date: formData.date.toISOString().split('T')[0],
+        time: formData.time,
+        address: formData.useCustomAddress ? formData.customAddress : addresses[0],
+        notes: formData.notes.trim(),
+        quantity: formData.quantity,
+        paymentMethod: 'online' // Default payment method
+      };
+
+      console.log('Navigation data prepared:', navigationBookingData);
+
+      setTimeout(() => {
+        try {
+          navigate(`/customer/booking-confirm/${bookingId}`, {
+            state: {
+              booking: navigationBookingData,
+              service: service,
+              fromBookingPage: true,
+              timestamp: Date.now()
+            },
+            replace: false // Don't replace current history entry
+          });
+          console.log('Navigation initiated successfully');
+        } catch (navigationError) {
+          console.error('Navigation error:', navigationError);
+          toast.update(toastId, {
+            render: 'Booking created successfully! Redirecting to bookings page...',
+            type: 'success',
+            isLoading: false,
+            autoClose: 3000
+          });
+          
+          // Fallback navigation
+          setTimeout(() => {
+            navigate('/customer/bookings', {
+              state: {
+                message: 'Booking created successfully!',
+                bookingId: bookingId,
+                showSuccessMessage: true
+              }
+            });
+          }, 1000);
+        }
       }, 1000);
 
     } catch (err) {
@@ -509,20 +549,16 @@ const BookService = () => {
       }
 
       toast.update(toastId, {
-        render: `❌ ${errorMessage}`,
+        render: errorMessage,
         type: 'error',
         isLoading: false,
-        autoClose: 5000,
-        closeButton: true,
-        style: {
-          background: '#EF4444',
-          color: 'white',
-        }
+        autoClose: 5000
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
   const totalAmount = calculateTotal();
   const baseAmount = service?.basePrice * (formData.quantity || 1) || 0;
   const discountAmount = calculateDiscount();
@@ -530,78 +566,92 @@ const BookService = () => {
   // Loading state
   if (isLoading || !service) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading service details...</p>
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-secondary/70">Loading service details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors mb-6"
+            className="group flex items-center text-primary hover:text-primary/80 transition-all duration-200 mb-6 hover:scale-105"
           >
-            <FaArrowLeft className="mr-2" />
+            <FaArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
             Back to services
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Book {service.title}</h1>
-          <p className="text-gray-500 mt-2">Complete your booking details below</p>
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl lg:text-4xl font-bold text-secondary mb-2">
+              Book {service.title}
+            </h1>
+            <p className="text-secondary/60 text-lg">Complete your booking details below</p>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Service Summary Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
+            <div className="bg-background rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-6 hover:shadow-xl transition-shadow duration-300">
+              {/* Service Header */}
               <div className="flex items-start mb-6">
-                <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                <div className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-gray-50 shadow-md">
                   <img
                     src={service.image || '/placeholder-service.jpg'}
                     alt={service.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       e.target.src = '/placeholder-service.jpg';
                     }}
                   />
                 </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-semibold text-gray-900">{service.title}</h2>
-                  <p className="text-sm text-gray-500 capitalize">{service.category?.toLowerCase()}</p>
-                  <p className="text-sm text-gray-500 mt-1">{service.duration} hours</p>
+                <div className="ml-4 flex-1">
+                  <h2 className="text-xl font-bold text-secondary mb-1">{service.title}</h2>
+                  <p className="text-sm text-primary font-medium capitalize bg-primary/10 px-2 py-1 rounded-full inline-block">
+                    {service.category?.toLowerCase()}
+                  </p>
+                  <div className="flex items-center mt-2 text-secondary/60">
+                    <FaClock className="mr-1 text-xs" />
+                    <span className="text-sm">{service.duration} hours</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4 border-t border-gray-200 pt-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service Price:</span>
-                  <span className="font-medium">
+              {/* Price Details */}
+              <div className="space-y-4 border-t border-gray-100 pt-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-secondary/70">Service Price:</span>
+                  <span className="font-semibold text-secondary">
                     ₹{(service.basePrice || 0).toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Quantity:</span>
-                  <span className="font-medium">{formData.quantity}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-secondary/70">Quantity:</span>
+                  <span className="font-semibold text-secondary">{formData.quantity}</span>
                 </div>
 
+                {/* Applied Coupon Display */}
                 {formData.appliedCoupon && (
-                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-700">
+                      <span className="font-semibold text-green-700 flex items-center">
+                        <FaTag className="mr-2" />
                         {formData.appliedCoupon.code} Applied
                       </span>
                       <button
                         onClick={removeCoupon}
-                        className="text-red-500 hover:text-red-700 text-sm"
+                        className="text-red-500 hover:text-red-700 text-sm font-medium hover:scale-105 transition-all duration-200"
                       >
                         Remove
                       </button>
                     </div>
-                    <div className="mt-1 text-sm text-green-600">
+                    <div className="mt-2 text-sm text-green-600">
                       {formData.appliedCoupon.discountType === 'percent' ? (
                         <span>{formData.appliedCoupon.discountValue}% OFF</span>
                       ) : (
@@ -615,27 +665,27 @@ const BookService = () => {
                 )}
 
                 {/* Price Summary */}
-                <div className="border-t border-gray-200 pt-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-medium">₹{baseAmount.toFixed(2)}</span>
+                <div className="border-t border-gray-100 pt-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary/70">Subtotal:</span>
+                    <span className="font-medium text-secondary">₹{baseAmount.toFixed(2)}</span>
                   </div>
                   {formData.appliedCoupon && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-secondary/70">Discount:</span>
                       <span className="font-medium text-green-600">-₹{discountAmount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-t border-gray-200 pt-2">
-                    <span className="text-gray-600 font-semibold">Total Amount:</span>
-                    <span className="font-bold text-lg">₹{totalAmount.toFixed(2)}</span>
+                  <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+                    <span className="text-secondary font-bold text-lg">Total Amount:</span>
+                    <span className="font-bold text-xl text-primary">₹{totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Coupon Section */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <FaTag className="mr-2 text-blue-500" />
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-secondary mb-3 flex items-center">
+                    <FaTag className="mr-2 text-primary" />
                     Apply Coupon
                   </h3>
                   <div className="flex gap-2">
@@ -644,27 +694,28 @@ const BookService = () => {
                       placeholder="Enter coupon code"
                       value={formData.couponCode}
                       onChange={(e) => setFormData(prev => ({ ...prev, couponCode: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
                       disabled={!!formData.appliedCoupon || isFetchingCoupons}
                     />
                     <button
                       type="button"
                       onClick={applyCoupon}
                       disabled={!!formData.appliedCoupon || isFetchingCoupons || !formData.couponCode.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
                     >
                       {isFetchingCoupons ? 'Checking...' : 'Apply'}
                     </button>
                   </div>
 
+                  {/* Available Coupons */}
                   {coupons.length > 0 && !formData.appliedCoupon && (
-                    <div className="mt-3">
-                      <p className="text-xs text-gray-500 mb-1">Available coupons:</p>
-                      <div className="space-y-2">
+                    <div className="mt-4">
+                      <p className="text-xs text-secondary/60 mb-2">Available coupons:</p>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
                         {coupons.map(coupon => (
                           <div
                             key={coupon._id}
-                            className="p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                            className="p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer"
                             onClick={() => {
                               setFormData(prev => ({
                                 ...prev,
@@ -673,14 +724,14 @@ const BookService = () => {
                             }}
                           >
                             <div className="flex justify-between items-start">
-                              <span className="font-medium text-blue-600">{coupon.code}</span>
-                              <span className="text-sm font-semibold bg-green-100 text-green-800 px-2 py-1 rounded">
+                              <span className="font-medium text-primary">{coupon.code}</span>
+                              <span className="text-xs font-semibold bg-green-100 text-green-800 px-2 py-1 rounded-full">
                                 {coupon.discountType === 'percent'
                                   ? `${coupon.discountValue}% OFF`
                                   : `₹${coupon.discountValue} OFF`}
                               </span>
                             </div>
-                            <div className="mt-1 text-xs text-gray-500">
+                            <div className="mt-1 text-xs text-secondary/60">
                               {coupon.minBookingValue > 0 && (
                                 <p>Min. order: ₹{coupon.minBookingValue}</p>
                               )}
@@ -700,30 +751,42 @@ const BookService = () => {
 
           {/* Booking Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Booking Details</h2>
+            <form onSubmit={handleSubmit} className="bg-background rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-2xl font-bold text-secondary mb-8 flex items-center">
+                <FaCalendarAlt className="mr-3 text-primary" />
+                Booking Details
+              </h2>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Date and Time */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Booking Date *</label>
+                    <label className="block text-sm font-semibold text-secondary mb-2 flex items-center">
+                      <FaCalendarAlt className="mr-2 text-primary" />
+                      Booking Date *
+                    </label>
                     <DatePicker
                       selected={formData.date}
                       onChange={handleDateChange}
                       minDate={new Date()}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      maxDate={maxDate}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                       dateFormat="MMMM d, yyyy"
                       required
+                      placeholderText="Select booking date"
                     />
+                    <p className="text-xs text-secondary/60 mt-1">Available for next 3 days only</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time Slot *</label>
+                    <label className="block text-sm font-semibold text-secondary mb-2 flex items-center">
+                      <FaClock className="mr-2 text-primary" />
+                      Time Slot *
+                    </label>
                     <select
                       name="time"
                       value={formData.time}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                       required
                     >
                       <option value="">Select a time slot</option>
@@ -740,15 +803,15 @@ const BookService = () => {
 
                 {/* Quantity */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
-                  <div className="flex items-center">
+                  <label className="block text-sm font-semibold text-secondary mb-2">Quantity *</label>
+                  <div className="flex items-center space-x-0">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange('decrement')}
-                      className="px-3 py-1.5 border border-gray-300 rounded-l-lg bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-3 border border-gray-200 rounded-l-xl bg-gray-50 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={formData.quantity <= 1}
                     >
-                      <FaMinus className="w-3 h-3" />
+                      <FaMinus className="w-4 h-4 text-secondary" />
                     </button>
                     <input
                       type="number"
@@ -767,22 +830,26 @@ const BookService = () => {
                           }));
                         }
                       }}
-                      className="w-16 px-2 py-1.5 border-t border-b border-gray-300 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-20 px-3 py-3 border-t border-b border-gray-200 text-center focus:outline-none focus:ring-2 focus:ring-primary font-semibold text-secondary"
                     />
                     <button
                       type="button"
                       onClick={() => handleQuantityChange('increment')}
-                      className="px-3 py-1.5 border border-gray-300 rounded-r-lg bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-3 border border-gray-200 rounded-r-xl bg-gray-50 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={formData.quantity >= 10}
                     >
-                      <FaPlus className="w-3 h-3" />
+                      <FaPlus className="w-4 h-4 text-secondary" />
                     </button>
                   </div>
+                  <p className="text-xs text-secondary/60 mt-1">Maximum 10 services can be booked at once</p>
                 </div>
 
                 {/* Address Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Service Address *</label>
+                  <label className="block text-sm font-semibold text-secondary mb-3 flex items-center">
+                    <FaMapMarkerAlt className="mr-2 text-primary" />
+                    Service Address *
+                  </label>
 
                   <div className="space-y-4">
                     {addresses.length > 0 && (
@@ -793,21 +860,21 @@ const BookService = () => {
                             id="savedAddress"
                             checked={!formData.useCustomAddress}
                             onChange={() => setFormData(prev => ({ ...prev, useCustomAddress: false }))}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
                           />
-                          <label htmlFor="savedAddress" className="ml-2 block text-sm text-gray-700">
+                          <label htmlFor="savedAddress" className="ml-3 block text-sm font-medium text-secondary">
                             Use saved address
                           </label>
                         </div>
 
                         {!formData.useCustomAddress && (
-                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 hover:border-primary/40 transition-colors duration-200">
                             <div className="flex items-start">
                               <div className="flex-shrink-0 mt-1">
-                                <FaMapMarkerAlt className="h-5 w-5 text-gray-400" />
+                                <FaMapMarkerAlt className="h-5 w-5 text-primary" />
                               </div>
                               <div className="ml-3">
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-secondary font-medium">
                                   {addresses[0].street}, {addresses[0].city}, {addresses[0].state} - {addresses[0].postalCode}
                                 </p>
                               </div>
@@ -823,17 +890,17 @@ const BookService = () => {
                         id="customAddress"
                         checked={formData.useCustomAddress}
                         onChange={() => setFormData(prev => ({ ...prev, useCustomAddress: true }))}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
                       />
-                      <label htmlFor="customAddress" className="ml-2 block text-sm text-gray-700">
+                      <label htmlFor="customAddress" className="ml-3 block text-sm font-medium text-secondary">
                         Use custom address
                       </label>
                     </div>
 
                     {formData.useCustomAddress && (
-                      <div className="mt-4 space-y-4">
+                      <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                         <div>
-                          <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+                          <label htmlFor="street" className="block text-sm font-medium text-secondary mb-1">Street Address *</label>
                           <input
                             type="text"
                             id="street"
@@ -841,13 +908,13 @@ const BookService = () => {
                             placeholder="House no., Building, Street"
                             value={formData.customAddress.street}
                             onChange={handleAddressChange}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                             required
                           />
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                            <label htmlFor="city" className="block text-sm font-medium text-secondary mb-1">City *</label>
                             <input
                               type="text"
                               id="city"
@@ -855,12 +922,12 @@ const BookService = () => {
                               placeholder="City"
                               value={formData.customAddress.city}
                               onChange={handleAddressChange}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                               required
                             />
                           </div>
                           <div>
-                            <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                            <label htmlFor="state" className="block text-sm font-medium text-secondary mb-1">State *</label>
                             <input
                               type="text"
                               id="state"
@@ -868,14 +935,14 @@ const BookService = () => {
                               placeholder="State"
                               value={formData.customAddress.state}
                               onChange={handleAddressChange}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                               required
                             />
                           </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">Postal Code *</label>
+                            <label htmlFor="postalCode" className="block text-sm font-medium text-secondary mb-1">Postal Code *</label>
                             <input
                               type="text"
                               id="postalCode"
@@ -883,20 +950,20 @@ const BookService = () => {
                               placeholder="6-digit postal code"
                               value={formData.customAddress.postalCode}
                               onChange={handleAddressChange}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50"
                               pattern="\d{6}"
                               required
                             />
                           </div>
                           <div>
-                            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <label htmlFor="country" className="block text-sm font-medium text-secondary mb-1">Country</label>
                             <input
                               type="text"
                               id="country"
                               name="country"
                               value={formData.customAddress.country}
                               onChange={handleAddressChange}
-                              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
                               disabled
                             />
                           </div>
@@ -908,40 +975,43 @@ const BookService = () => {
 
                 {/* Additional Notes */}
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Additional Notes (Optional)</label>
+                  <label htmlFor="notes" className="block text-sm font-semibold text-secondary mb-2">Additional Notes (Optional)</label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={formData.notes}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="3"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 hover:border-primary/50 resize-none"
+                    rows="4"
                     placeholder="Any special instructions for the service provider..."
                   />
                 </div>
 
                 {/* Submit Button */}
-                <div className="pt-2">
+                <div className="pt-4">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center items-center px-6 py-3.5 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center items-center px-8 py-4 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed hover:scale-[1.02] hover:shadow-xl"
                   >
                     {isSubmitting ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Processing...
+                        Processing Booking...
                       </>
                     ) : (
                       <>
-                        <FaCheckCircle className="mr-2" />
-                        Confirm Booking (₹{totalAmount.toFixed(2)})
+                        <FaCheckCircle className="mr-3 text-xl" />
+                        Confirm Booking - ₹{totalAmount.toFixed(2)}
                       </>
                     )}
                   </button>
+                  <p className="text-xs text-secondary/60 text-center mt-2">
+                    You will be redirected to payment after booking confirmation
+                  </p>
                 </div>
               </div>
             </form>

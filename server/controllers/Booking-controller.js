@@ -19,7 +19,7 @@ const sendEmail = require('../utils/sendEmail');
 const createBooking = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  
+
   try {
     const {
       serviceId,
@@ -200,7 +200,7 @@ const createBooking = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    
+
     console.error('Error creating booking:', error);
     res.status(500).json({
       success: false,
@@ -235,8 +235,8 @@ const confirmBooking = async (req, res) => {
       _id: bookingId,
       customer: userId
     })
-    .populate('services.service')
-    .session(session);
+      .populate('services.service')
+      .session(session);
 
     if (!booking) {
       await session.abortTransaction();
@@ -341,7 +341,7 @@ const confirmBooking = async (req, res) => {
     // Send confirmation emails
     try {
       const user = await User.findById(userId).session(session);
-      
+
       const emailHtml = `
         <h2>Booking Confirmed</h2>
         <p>Your booking #${booking._id} has been confirmed.</p>
@@ -378,7 +378,7 @@ const confirmBooking = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    
+
     console.error('Error confirming booking:', error);
     res.status(500).json({
       success: false,
@@ -393,7 +393,7 @@ async function processOnlinePayment({ amount, bookingId, paymentDetails, userId 
   try {
     // In a real implementation, this would call your payment gateway (Razorpay, Stripe, etc.)
     // This is a simplified version
-    
+
     // Validate payment details
     if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expiry || !paymentDetails.cvv) {
       return { success: false, message: 'Card details are required for online payment' };
@@ -401,7 +401,7 @@ async function processOnlinePayment({ amount, bookingId, paymentDetails, userId 
 
     // Simulate payment processing
     const paymentSuccess = Math.random() > 0.1; // 90% success rate
-    
+
     if (paymentSuccess) {
       return {
         success: true,
@@ -430,7 +430,7 @@ async function processWalletPayment({ amount, userId, bookingId }, session) {
   try {
     // Deduct from user's wallet
     const user = await User.findById(userId).session(session);
-    
+
     if (user.walletBalance < amount) {
       return {
         success: false,
@@ -539,9 +539,9 @@ const getUserBookings = async (req, res) => {
     const bookingsWithTransactions = await Promise.all(
       bookings.map(async (booking) => {
         const bookingObj = booking.toObject();
-        
+
         // Find transaction for this booking
-        const transaction = await Transaction.findOne({ 
+        const transaction = await Transaction.findOne({
           booking: booking._id,
           paymentStatus: { $in: ['completed', 'paid'] }
         }).sort({ createdAt: -1 });
@@ -633,7 +633,7 @@ const updateBookingPayment = async (req, res) => {
     // Update payment details
     booking.paymentMethod = paymentMethod;
     booking.paymentStatus = paymentStatus;
-    
+
     // Keep booking status as "pending" until provider accepts
     if (booking.status !== 'accepted' && booking.status !== 'completed') {
       booking.status = 'pending';
@@ -788,17 +788,17 @@ const getBooking = async (req, res) => {
 
     // Fetch transaction details
     const Transaction = require('../models/Transaction-model ');
-    const transactions = await Transaction.find({ 
-      booking: booking._id 
+    const transactions = await Transaction.find({
+      booking: booking._id
     }).sort({ createdAt: -1 });
 
     const bookingObj = booking.toObject();
-    
+
     if (transactions.length > 0) {
-      const completedTransaction = transactions.find(t => 
+      const completedTransaction = transactions.find(t =>
         ['completed', 'paid'].includes(t.paymentStatus)
       ) || transactions[0];
-      
+
       bookingObj.transactionId = completedTransaction.transactionId;
       bookingObj.razorpayPaymentId = completedTransaction.razorpayPaymentId;
       bookingObj.razorpayOrderId = completedTransaction.razorpayOrderId;
@@ -826,7 +826,7 @@ const getBooking = async (req, res) => {
 const cancelBooking = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  
+
   try {
     const { id } = req.params;
     // Handle cases where req.body might be undefined or empty
@@ -862,13 +862,13 @@ const cancelBooking = async (req, res) => {
     }
 
     const previousStatus = booking.status;
-    
+
     // Step 1: Mark booking as cancelled
     booking.status = 'cancelled';
     booking.cancellationProgress.status = 'cancelled';
     booking.cancellationProgress.reason = reason || 'Customer requested cancellation';
     booking.cancellationProgress.cancelledAt = new Date();
-    
+
     await booking.save({ session });
 
     // Update user stats
@@ -897,28 +897,28 @@ const cancelBooking = async (req, res) => {
         try {
           const refundSession = await mongoose.startSession();
           refundSession.startTransaction();
-          
+
           const bookingToUpdate = await Booking.findById(id).session(refundSession);
-          
+
           if (booking.paymentMethod === 'online') {
             // For online payments, initiate refund through payment gateway
             // This is a simulation - in real app, call Razorpay/Stripe refund API
             const refundTransactionId = `REFUND-${Date.now()}`;
-            
+
             bookingToUpdate.cancellationProgress.status = 'refund_completed';
             bookingToUpdate.cancellationProgress.refundTransactionId = refundTransactionId;
             bookingToUpdate.cancellationProgress.refundCompletedAt = new Date();
-            
+
           } else if (booking.paymentMethod === 'cash') {
             // For cash payments, mark as refund completed immediately
             bookingToUpdate.cancellationProgress.status = 'refund_completed';
             bookingToUpdate.cancellationProgress.refundCompletedAt = new Date();
           }
-          
+
           await bookingToUpdate.save({ session: refundSession });
           await refundSession.commitTransaction();
           refundSession.endSession();
-          
+
           // Send refund completion email
           const user = await User.findById(userId);
           const refundEmailHtml = `
@@ -936,7 +936,7 @@ const cancelBooking = async (req, res) => {
             subject: 'Refund Processed Successfully',
             html: refundEmailHtml
           });
-          
+
         } catch (refundError) {
           console.error('Error processing refund:', refundError);
         }
@@ -1013,7 +1013,7 @@ const cancelBooking = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    
+
     console.error('Error cancelling booking:', error);
     res.status(500).json({
       success: false,
@@ -1157,16 +1157,16 @@ const getProviderBookingById = async (req, res) => {
     const providerId = req.provider._id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Invalid booking ID format' 
+        message: 'Invalid booking ID format'
       });
     }
 
     const provider = await Provider.findById(providerId)
       .select('services performanceTier')
       .lean();
-    
+
     if (!provider) {
       return res.status(404).json({
         success: false,
@@ -1193,14 +1193,14 @@ const getProviderBookingById = async (req, res) => {
         { provider: providerId }
       ]
     })
-    .populate('customer', 'name email phone')
-    .populate('services.service', 'name description duration price')
-    .lean();
+      .populate('customer', 'name email phone')
+      .populate('services.service', 'name description duration price')
+      .lean();
 
     if (!booking) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: 'Booking not found or not available for this provider' 
+        message: 'Booking not found or not available for this provider'
       });
     }
 
@@ -1224,13 +1224,13 @@ const getProviderBookingById = async (req, res) => {
       providerCommissionRate: commissionRule ? commissionRule.value : 0
     };
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      data: responseData 
+      data: responseData
     });
   } catch (error) {
     console.error("Error fetching booking:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Server error while fetching booking',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -1253,7 +1253,7 @@ const getBookingsByStatus = async (req, res) => {
     const statusMapping = {
       'inProgress': 'in-progress'
     };
-    
+
     // Apply status mapping if needed
     if (statusMapping[status]) {
       status = statusMapping[status];
@@ -1269,7 +1269,7 @@ const getBookingsByStatus = async (req, res) => {
 
     const provider = await Provider.findById(providerId)
       .select('services performanceTier');
-    
+
     if (!provider) {
       return res.status(404).json({
         success: false,
@@ -1315,7 +1315,7 @@ const getBookingsByStatus = async (req, res) => {
         booking.totalAmount,
         commissionRule
       );
-      
+
       return {
         ...booking,
         commission: {
@@ -1403,7 +1403,7 @@ const acceptBooking = async (req, res) => {
     }
 
     // Verify provider can service this booking
-    const canService = booking.services.every(serviceItem => 
+    const canService = booking.services.every(serviceItem =>
       provider.services.includes(serviceItem.service.category)
     );
 
@@ -1425,7 +1425,7 @@ const acceptBooking = async (req, res) => {
     // IMPORTANT: Provider can accept booking regardless of payment status
     // This allows the workflow: Booking Created -> Payment -> Pending -> Provider Accepts -> Accepted
     // OR: Booking Created -> Pending -> Provider Accepts -> Accepted -> Payment (for cash payments)
-    
+
     // Update booking status to accepted
     booking.status = 'accepted';
     booking.provider = providerId;
@@ -1441,9 +1441,9 @@ const acceptBooking = async (req, res) => {
 
     // Send notification email (async - don't wait for it)
     try {
-      const paymentStatusText = booking.paymentStatus === 'paid' 
-        ? 'Payment has been received.' 
-        : booking.paymentMethod === 'cash' 
+      const paymentStatusText = booking.paymentStatus === 'paid'
+        ? 'Payment has been received.'
+        : booking.paymentMethod === 'cash'
           ? 'Payment will be collected after service completion.'
           : 'Payment is pending.';
 
@@ -1670,11 +1670,11 @@ const rejectBooking = async (req, res) => {
 const completeBooking = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  
+
   try {
     const { id } = req.params;
     const providerId = req.provider._id;
-    
+
     // Fix: Add null check for req.body before destructuring
     const { servicePhotos } = req.body || {};
 
@@ -1695,7 +1695,7 @@ const completeBooking = async (req, res) => {
     const provider = await Provider.findById(providerId)
       .select('name email performanceTier wallet services')
       .session(session);
-      
+
     if (!provider) {
       await session.abortTransaction();
       session.endSession();
@@ -1765,7 +1765,7 @@ const completeBooking = async (req, res) => {
 
     // Verify provider can service this booking (check service categories)
     const bookingServiceCategories = booking.services.map(s => s.service.category);
-    const canServiceAll = bookingServiceCategories.every(category => 
+    const canServiceAll = bookingServiceCategories.every(category =>
       provider.services.includes(category)
     );
 
@@ -1797,13 +1797,13 @@ const completeBooking = async (req, res) => {
     const previousStatus = booking.status;
     booking.status = 'completed';
     booking.completedAt = new Date();
-    
+
     // IMPORTANT FIX: Update payment status for cash payments when booking is completed
     if (booking.paymentMethod === 'cash' && booking.paymentStatus === 'pending') {
       booking.paymentStatus = 'paid';
       booking.paymentDate = new Date();
       console.log(`[COMPLETE BOOKING] Cash payment status updated to 'paid' for booking ${id}`);
-      
+
       // Create transaction record for cash payment
       const Transaction = require('../models/Transaction-model ');
       const cashTransaction = new Transaction({
@@ -1820,7 +1820,7 @@ const completeBooking = async (req, res) => {
       await cashTransaction.save({ session });
       console.log(`[COMPLETE BOOKING] Cash transaction record created: ${cashTransaction.transactionId}`);
     }
-    
+
     // Add service photos if provided
     if (servicePhotos && servicePhotos.length > 0) {
       booking.servicePhotos = servicePhotos;
@@ -1868,12 +1868,12 @@ const completeBooking = async (req, res) => {
     // Send confirmation emails (async, don't wait)
     setImmediate(async () => {
       try {
-        const servicesList = booking.services.map(item => 
+        const servicesList = booking.services.map(item =>
           `<li>${item.service.title} (Qty: ${item.quantity}) - ₹${item.price.toFixed(2)}</li>`
         ).join('');
 
-        const paymentStatusText = booking.paymentMethod === 'cash' 
-          ? 'Cash Payment Received - Thank you!' 
+        const paymentStatusText = booking.paymentMethod === 'cash'
+          ? 'Cash Payment Received - Thank you!'
           : (booking.paymentStatus === 'paid' ? 'Paid - Thank you!' : 'Pending - Please make payment soon');
 
         const emailHtml = `
@@ -1945,11 +1945,11 @@ const completeBooking = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    
+
     // Fix: Use req.params.id directly in case id variable is not in scope
     const bookingId = req.params.id || 'unknown';
     console.error(`[COMPLETE BOOKING] Error completing booking ${bookingId}:`, error);
-    
+
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to complete booking',
@@ -2054,7 +2054,7 @@ const getAllBookings = async (req, res) => {
 
 
 
- // Get booking details with service and payment information
+// Get booking details with service and payment information
 const getBookingDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -2097,8 +2097,8 @@ const getBookingDetails = async (req, res) => {
     // Get payment details from transactions
     let paymentDetails = null;
     const Transaction = require('../models/Transaction-model ');
-    const transactions = await Transaction.find({ 
-      booking: booking._id 
+    const transactions = await Transaction.find({
+      booking: booking._id
     }).sort({ createdAt: -1 });
 
     if (transactions.length > 0 && booking.paymentMethod === 'online') {

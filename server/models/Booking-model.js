@@ -75,16 +75,6 @@ const bookingSchema = new Schema({
           return value instanceof Date && !isNaN(value);
         },
         message: 'Invalid date format'
-      },
-      {
-        validator: function (value) {
-          // Only validate future date for new bookings, not when updating existing ones
-          if (this.isNew) {
-            return value >= new Date();
-          }
-          return true;
-        },
-        message: 'Booking date cannot be in the past'
       }
     ]
   },

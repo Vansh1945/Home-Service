@@ -22,9 +22,12 @@ import {
   CalendarIcon,
   CogIcon,
   WrenchIcon,
-  BoltIcon
+  BoltIcon,
+  HomeIcon,
+  PhoneIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import Rating from 'react-rating';
 import FeedbackModal from '../Customer/Feedback';
 
@@ -46,29 +49,6 @@ const ServiceDetailPage = () => {
   const [allFeedbacks, setAllFeedbacks] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [zoomImage, setZoomImage] = useState(false);
-
-  const serviceHighlights = [
-    {
-      icon: <ShieldCheckIcon className="w-6 h-6 text-blue-600" />,
-      title: "30-Day Warranty",
-      description: "Free service if issue reoccurs within warranty period"
-    },
-    {
-      icon: <TruckIcon className="w-6 h-6 text-blue-600" />,
-      title: "Same Day Service",
-      description: "Available in most locations"
-    },
-    {
-      icon: <UserIcon className="w-6 h-6 text-blue-600" />,
-      title: "Certified Experts",
-      description: "Trained professionals"
-    },
-    {
-      icon: <CreditCardIcon className="w-6 h-6 text-blue-600" />,
-      title: "Secure Payments",
-      description: "100% payment protection"
-    }
-  ];
 
   const fetchServiceFeedbacks = async () => {
     try {
@@ -281,6 +261,14 @@ const ServiceDetailPage = () => {
     return customerName.split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Get top-rated review
+  const getTopReview = () => {
+    if (allFeedbacks.length === 0) return null;
+    return allFeedbacks.reduce((prev, current) => 
+      (prev.rating > current.rating) ? prev : current
+    );
+  };
+
   // Custom Rating Component to avoid deprecated lifecycle warnings
   const CustomRating = ({ value, readonly = true }) => {
     return (
@@ -314,14 +302,17 @@ const ServiceDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+          <div className="inline-flex items-center space-x-2 mb-6">
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
-          <p className="mt-4 text-gray-600 font-medium">Loading service details...</p>
+          <p className="text-secondary font-medium text-lg">Loading service details...</p>
+          <div className="mt-4 w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full animate-pulse"></div>
+          </div>
         </div>
       </div>
     );
@@ -329,16 +320,18 @@ const ServiceDetailPage = () => {
 
   if (!service) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md p-6 bg-white rounded-lg shadow-md">
-          <ExclamationTriangleIcon className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Service Not Found</h3>
-          <p className="text-gray-600 mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+          <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ExclamationTriangleIcon className="w-8 h-8 text-accent" />
+          </div>
+          <h3 className="text-xl font-semibold text-secondary mb-3">Service Not Found</h3>
+          <p className="text-gray-600 mb-6 leading-relaxed">
             The service you're looking for doesn't exist or may have been removed.
           </p>
           <button
             onClick={() => navigate('/services')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white font-medium rounded-xl hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Browse Services
           </button>
@@ -347,28 +340,30 @@ const ServiceDetailPage = () => {
     );
   }
 
+  const topReview = getTopReview();
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Breadcrumb Navigation */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <ol className="inline-flex items-center space-x-2 md:space-x-4">
               <li className="inline-flex items-center">
                 <button
-                  onClick={() => navigate('/services')}
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                  onClick={() => navigate('/customer/services')}
+                  className="inline-flex items-center text-sm font-medium text-secondary hover:text-primary transition-all duration-300 group"
                 >
-                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                  <HomeIcon className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                   All Services
                 </button>
               </li>
               <li>
                 <div className="flex items-center">
-                  <ChevronRightIcon className="w-4 h-4 mx-1 text-gray-400" />
+                  <ChevronRightIcon className="w-4 h-4 mx-2 text-gray-400" />
                   <button
-                    onClick={() => navigate(`/services?category=${service.category}`)}
-                    className="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
+                    onClick={() => navigate(`/customer/services?category=${service.category}`)}
+                    className="text-sm font-medium text-gray-600 hover:text-primary transition-all duration-300 px-2 py-1 rounded-lg hover:bg-primary/5"
                   >
                     {service.category}
                   </button>
@@ -376,8 +371,10 @@ const ServiceDetailPage = () => {
               </li>
               <li aria-current="page">
                 <div className="flex items-center">
-                  <ChevronRightIcon className="w-4 h-4 mx-1 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 truncate max-w-xs">{service.title}</span>
+                  <ChevronRightIcon className="w-4 h-4 mx-2 text-gray-400" />
+                  <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full truncate max-w-xs">
+                    {service.title}
+                  </span>
                 </div>
               </li>
             </ol>
@@ -386,169 +383,158 @@ const ServiceDetailPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-          <div className="md:flex">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white/20">
+          <div className="lg:flex">
             {/* Service Image Gallery */}
-            <div className="md:w-2/5 p-6">
-              <div className="sticky top-6">
+            <div className="lg:w-2/5 p-6 lg:p-8">
+              <div className="sticky top-24">
                 <div 
-                  className={`relative h-96 rounded-xl overflow-hidden bg-gray-100 mb-4 cursor-${zoomImage ? 'zoom-out' : 'zoom-in'}`}
+                  className={`relative h-80 lg:h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 mb-6 cursor-${zoomImage ? 'zoom-out' : 'zoom-in'} group`}
                   onClick={() => setZoomImage(!zoomImage)}
                 >
                   <img
                     src={`${API}/uploads/services/${service.image || 'default-service.jpg'}`}
                     alt={service.title}
-                    className={`w-full h-full object-contain transition-transform duration-300 ${zoomImage ? 'scale-150' : 'scale-100'}`}
+                    className={`w-full h-full object-contain transition-all duration-500 ${zoomImage ? 'scale-150' : 'scale-100 group-hover:scale-105'}`}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = '/placeholder-service.jpg';
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {zoomImage && (
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white text-sm px-3 py-2 rounded-lg">
                       Click to zoom out
                     </div>
                   )}
                 </div>
 
                 {/* Service Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <CheckBadgeIcon className="w-3 h-3 mr-1" />
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-green-50 text-green-700 border border-green-200">
+                    <CheckBadgeIcon className="w-3 h-3 mr-1.5" />
                     Verified
                   </span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    <BoltIcon className="w-3 h-3 mr-1" />
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-primary/10 to-primary/5 text-primary border border-primary/20">
+                    <BoltIcon className="w-3 h-3 mr-1.5" />
                     Popular
                   </span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    <WrenchIcon className="w-3 h-3 mr-1" />
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-accent/10 to-accent/5 text-accent border border-accent/20">
+                    <WrenchIcon className="w-3 h-3 mr-1.5" />
                     Expert Service
                   </span>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-3 mt-4">
+                <div className="flex space-x-3 mb-8">
                   <button
                     onClick={handleBookNow}
-                    className="flex-1 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all shadow-md hover:shadow-lg"
+                    className="flex-1 flex items-center justify-center bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
                   >
-                    <CalendarIcon className="w-5 h-5 mr-2" />
+                    <CalendarIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
                     Book Now
                   </button>
                   <button
                     onClick={handleShare}
-                    className="p-2.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors"
+                    className="p-3.5 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group"
                   >
-                    <ShareIcon className="w-5 h-5 text-gray-600" />
+                    <ShareIcon className="w-5 h-5 text-gray-600 group-hover:text-primary transition-colors duration-300" />
+                  </button>
+                  <button className="p-3.5 rounded-xl border border-gray-200 hover:border-accent/30 hover:bg-accent/5 transition-all duration-300 group">
+                    <HeartIcon className="w-5 h-5 text-gray-600 group-hover:text-accent transition-colors duration-300" />
                   </button>
                 </div>
 
-
-                 {/* Service Highlights */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Why Choose Us?</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {serviceHighlights.map((highlight, index) => (
-                      <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-white transition-colors">
-                        <div className="flex-shrink-0 mt-1">
-                          {highlight.icon}
-                        </div>
-                        <div className="ml-3">
-                          <h4 className="text-sm font-medium text-gray-900">{highlight.title}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{highlight.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Delivery Info */}
-                {/* <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                {/* Contact Info */}
+                <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/10">
                   <div className="flex items-start">
-                    <MapPinIcon className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-1">Delivery & Service Availability</h4>
-                      <p className="text-xs text-gray-600">
-                        Available in most areas. Enter your location during booking to check exact availability.
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <PhoneIcon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="text-sm font-semibold text-secondary mb-1">Need Help?</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Contact our support team for any queries about this service.
                       </p>
                     </div>
                   </div>
-                </div> */}
+                </div>
               </div>
             </div>
 
             {/* Service Details */}
-            <div className="md:w-3/5 p-6 border-l border-gray-200">
-              <div className="sticky top-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h1 className="text-2xl font-bold text-gray-900">{service.title}</h1>
-                  <div className="flex items-center bg-blue-100 px-3 py-1 rounded-full">
+            <div className="lg:w-3/5 p-6 lg:p-8 border-l border-gray-200/50">
+              <div className="sticky top-24">
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6">
+                  <div className="flex-1">
+                    <h1 className="text-3xl lg:text-4xl font-bold text-secondary mb-3 leading-tight">{service.title}</h1>
+                    <div className="flex items-center mb-4">
+                      <span className="text-primary text-sm font-semibold flex items-center bg-gradient-to-r from-green-100 to-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                        <CheckBadgeIcon className="w-4 h-4 mr-1.5" />
+                        Verified Service
+                      </span>
+                      <span className="ml-3 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">{service.category}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center bg-gradient-to-r from-accent/10 to-accent/5 px-4 py-2 rounded-xl border border-accent/20 mt-4 lg:mt-0">
                     <CustomRating value={averageRating} readonly />
-                    <span className="text-xs text-gray-700 ml-1">
+                    <span className="text-sm text-secondary font-medium ml-2">
                       {ratingCount} {ratingCount === 1 ? 'Rating' : 'Ratings'}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center mb-4">
-                  <span className="text-green-600 text-sm font-medium flex items-center bg-green-50 px-2.5 py-1 rounded-full">
-                    <CheckBadgeIcon className="w-4 h-4 mr-1" />
-                    Verified Service
-                  </span>
-                  <span className="ml-2 text-sm text-gray-500">| {service.category}</span>
-                </div>
-
                 {/* Price Section */}
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="flex items-baseline">
-                    <CurrencyRupeeIcon className="w-6 h-6 text-gray-900" />
-                    <span className="text-3xl font-bold text-gray-900 ml-1">
+                <div className="mb-8 p-6 bg-gradient-to-r from-primary/5 via-white to-accent/5 rounded-2xl border border-primary/10 shadow-sm">
+                  <div className="flex items-baseline mb-3">
+                    <CurrencyRupeeIcon className="w-7 h-7 text-secondary" />
+                    <span className="text-4xl font-bold text-secondary ml-1">
                       {service.basePrice?.toFixed(2) || '0.00'}
                     </span>
-                    <span className="ml-2 text-sm text-green-600 font-medium">Inclusive of all taxes</span>
+                    <span className="ml-3 text-sm text-primary font-semibold bg-primary/10 px-3 py-1 rounded-full">Inclusive of all taxes</span>
                   </div>
-                  <div className="flex items-center mt-2">
-                    <ClockIcon className="w-5 h-5 text-gray-500 mr-1" />
-                    <span className="text-sm text-gray-700">
+                  <div className="flex items-center text-gray-600">
+                    <ClockIcon className="w-5 h-5 text-primary mr-2" />
+                    <span className="text-sm font-medium">
                       {formatDuration(service.duration)} service duration
                     </span>
                   </div>
                 </div>
 
-               
-
                 {/* Description Section */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <CogIcon className="w-5 h-5 text-blue-600 mr-2" />
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-secondary mb-4 flex items-center">
+                    <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
                     Service Details
                   </h3>
-                  <div className="prose prose-sm text-gray-700 max-w-none">
+                  <div className="prose prose-sm text-gray-700 max-w-none leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                     {service.description}
                   </div>
                 </div>
 
                 {/* User's Feedback Section */}
                 {feedbackData ? (
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Feedback</h3>
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="border-t border-gray-200/50 pt-8">
+                    <h3 className="text-xl font-bold text-secondary mb-4 flex items-center">
+                      <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
+                      Your Feedback
+                    </h3>
+                    <div className="bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm p-6 rounded-2xl border border-gray-100/50 shadow-sm">
                       <div className="flex items-start">
                         <div className="flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white shadow-lg">
                             <UserIcon className="h-6 w-6" />
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="flex items-center">
+                        <div className="ml-4 flex-1">
+                          <div className="flex items-center mb-2">
                             <CustomRating value={feedbackData.rating} readonly />
-                            <span className="ml-2 text-sm text-gray-500">
+                            <span className="ml-3 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
                               {formatDate(feedbackData.createdAt)}
                             </span>
                           </div>
-                          <p className="mt-1 text-sm text-gray-700">
+                          <p className="text-gray-700 leading-relaxed">
                             {feedbackData.comment || 'No additional comments'}
                           </p>
                         </div>
@@ -556,15 +542,18 @@ const ServiceDetailPage = () => {
                     </div>
                   </div>
                 ) : hasCompletedBooking ? (
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Share Your Experience</h3>
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <p className="text-gray-700 mb-3">How was your experience with this service?</p>
+                  <div className="border-t border-gray-200/50 pt-8">
+                    <h3 className="text-xl font-bold text-secondary mb-4 flex items-center">
+                      <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
+                      Share Your Experience
+                    </h3>
+                    <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-2xl border border-primary/10">
+                      <p className="text-secondary mb-4 font-medium">How was your experience with this service?</p>
                       <button
                         onClick={() => setShowFeedbackModal(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+                        className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold flex items-center transform hover:-translate-y-0.5"
                       >
-                        <ChatBubbleLeftEllipsisIcon className="w-4 h-4 mr-2" />
+                        <ChatBubbleLeftEllipsisIcon className="w-5 h-5 mr-2" />
                         Submit Feedback
                       </button>
                     </div>
@@ -575,27 +564,26 @@ const ServiceDetailPage = () => {
           </div>
 
           {/* Detailed Information Section */}
-          <div className="border-t border-gray-200 p-6 bg-gray-50">
-            <div className="grid md:grid-cols-2 gap-8">
+          <div className="border-t border-gray-200/50 p-6 lg:p-8 bg-gradient-to-br from-gray-50/50 to-white/50 backdrop-blur-sm">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <CheckIcon className="w-5 h-5 text-green-500 mr-2" />
+                <h3 className="text-2xl font-bold text-secondary mb-6 flex items-center">
+                  <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
                   Service Inclusions
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[
                     "Professional diagnosis of the issue",
                     "High-quality replacement parts (if needed)",
                     "Complete service as per industry standards",
                     "Testing and verification of the solution",
-                    "30-day service warranty",
-                    "Detailed service report",
-                    "Expert consultation",
-                    "Cleanup after service"
+                    "30-day service warranty"
                   ].map((item, index) => (
-                    <div key={index} className="flex items-start">
-                      <CheckIcon className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                      <p className="text-gray-700">{item}</p>
+                    <div key={index} className="flex items-start p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100/50 hover:border-primary/20 hover:shadow-sm transition-all duration-300 group">
+                      <div className="flex-shrink-0 p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors duration-300 mt-0.5">
+                        <CheckIcon className="w-4 h-4 text-primary" />
+                      </div>
+                      <p className="text-gray-700 ml-3 leading-relaxed group-hover:text-secondary transition-colors duration-300">{item}</p>
                     </div>
                   ))}
                 </div>
@@ -603,8 +591,8 @@ const ServiceDetailPage = () => {
 
               {/* FAQ Section */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <ChatBubbleLeftEllipsisIcon className="w-5 h-5 text-blue-500 mr-2" />
+                <h3 className="text-2xl font-bold text-secondary mb-6 flex items-center">
+                  <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
                   Frequently Asked Questions
                 </h3>
                 <div className="space-y-3">
@@ -630,19 +618,25 @@ const ServiceDetailPage = () => {
                       answer: "Wiring beyond 2 meters is not included. Extra charges apply for additional materials or complex installations."
                     }
                   ].map((faq, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <div key={index} className="border border-gray-200/50 rounded-xl overflow-hidden bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
                       <button
-                        className={`flex items-center justify-between w-full p-4 text-left ${openAccordion === index ? 'bg-blue-50' : 'bg-white'}`}
+                        className={`flex items-center justify-between w-full p-4 text-left transition-all duration-300 ${
+                          openAccordion === index 
+                            ? 'bg-gradient-to-r from-primary/5 to-accent/5 text-secondary' 
+                            : 'bg-white/50 hover:bg-gray-50/50 text-gray-900'
+                        }`}
                         onClick={() => toggleAccordion(index)}
                       >
-                        <span className="font-medium text-gray-900">{faq.question}</span>
+                        <span className="font-semibold">{faq.question}</span>
                         <ChevronDownIcon
-                          className={`w-5 h-5 text-blue-600 transition-transform ${openAccordion === index ? 'transform rotate-180' : ''}`}
+                          className={`w-5 h-5 text-primary transition-transform duration-300 ${
+                            openAccordion === index ? 'transform rotate-180' : ''
+                          }`}
                         />
                       </button>
                       {openAccordion === index && (
-                        <div className="p-4 bg-white border-t border-gray-100">
-                          <p className="text-gray-700">{faq.answer}</p>
+                        <div className="p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100/50 animate-in slide-in-from-top-2 duration-300">
+                          <p className="text-gray-700 leading-relaxed">{faq.answer}</p>
                         </div>
                       )}
                     </div>
@@ -653,71 +647,67 @@ const ServiceDetailPage = () => {
           </div>
 
           {/* Customer Reviews Section */}
-          <div className="border-t border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-                <ChatBubbleLeftEllipsisIcon className="w-5 h-5 text-blue-500 mr-2" />
+          <div className="border-t border-gray-200/50 p-6 lg:p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+              <h3 className="text-2xl font-bold text-secondary mb-4 lg:mb-0 flex items-center">
+                <div className="w-1 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3"></div>
                 Customer Reviews
               </h3>
-              <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full">
+              <div className="flex items-center bg-gradient-to-r from-accent/10 to-accent/5 px-4 py-2 rounded-xl border border-accent/20">
                 <CustomRating value={averageRating} readonly />
-                <span className="ml-2 text-sm text-gray-700">
+                <span className="ml-3 text-sm text-secondary font-semibold">
                   {averageRating} out of 5 ({ratingCount} {ratingCount === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
             </div>
 
-            {allFeedbacks.length > 0 ? (
-              <div className="space-y-4">
-                {allFeedbacks.map((feedback, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
-                          {getCustomerInitials(feedback.customer?.name || 'Unknown User')}
-                        </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <h4 className="font-medium text-gray-900">
-                              {feedback.customer?.name || 'Anonymous User'}
-                            </h4>
-                            <div className="ml-3 flex items-center">
-                              <CustomRating value={feedback.rating} readonly />
-                            </div>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(feedback.createdAt)}
-                          </span>
-                        </div>
-                        {feedback.comment && (
-                          <p className="text-gray-700 text-sm leading-relaxed">
-                            "{feedback.comment}"
-                          </p>
-                        )}
-                        {feedback.booking && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                              <CheckBadgeIcon className="w-3 h-3 mr-1" />
-                              Verified Purchase
-                            </span>
-                          </div>
-                        )}
-                      </div>
+            {topReview ? (
+              <div className="bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm p-6 rounded-2xl border border-gray-100/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 group">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      {getCustomerInitials(topReview.customer?.name || 'Unknown User')}
                     </div>
                   </div>
-                ))}
+                  <div className="ml-4 flex-1">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-3">
+                      <div className="flex items-center mb-2 lg:mb-0">
+                        <h4 className="font-semibold text-secondary mr-3">
+                          {topReview.customer?.name || 'Anonymous User'}
+                        </h4>
+                        <CustomRating value={topReview.rating} readonly />
+                      </div>
+                      <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        {formatDate(topReview.createdAt)}
+                      </span>
+                    </div>
+                    {topReview.comment && (
+                      <p className="text-gray-700 leading-relaxed mb-3 italic">
+                        "{topReview.comment}"
+                      </p>
+                    )}
+                    {topReview.booking && (
+                      <div>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-green-50 text-green-700 border border-green-200">
+                          <CheckBadgeIcon className="w-3 h-3 mr-1.5" />
+                          Verified Purchase
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                <ChatBubbleLeftEllipsisIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 font-medium">No reviews yet</p>
-                <p className="text-sm text-gray-500 mt-1">Be the first to review this service!</p>
+              <div className="text-center py-12 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl border border-gray-100/50">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ChatBubbleLeftEllipsisIcon className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-secondary mb-2">No reviews yet</h4>
+                <p className="text-gray-600 mb-6">Be the first to review this service!</p>
                 {isAuthenticated && hasCompletedBooking && (
                   <button
                     onClick={() => setShowFeedbackModal(true)}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold transform hover:-translate-y-0.5"
                   >
                     Write a Review
                   </button>
@@ -729,49 +719,50 @@ const ServiceDetailPage = () => {
 
         {/* Related Services Section */}
         {relatedServices.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <ArrowPathIcon className="w-6 h-6 text-blue-600 mr-2" />
+          <div className="mt-16">
+            <h2 className="text-3xl font-bold text-secondary mb-8 flex items-center">
+              <div className="w-1 h-8 bg-gradient-to-b from-primary to-accent rounded-full mr-4"></div>
               Similar Services You Might Like
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedServices.map((relatedService) => (
                 <div
                   key={relatedService._id}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer border border-gray-200 group"
-                  onClick={() => navigate(`/service/${relatedService._id}`)}
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-white/20 group transform hover:-translate-y-2"
+                  onClick={() => navigate(`/customer/service/${relatedService._id}`)}
                 >
-                  <div className="relative h-48 bg-gray-100">
+                  <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden">
                     <img
-                      src={`${API}/uploads/services/${relatedService.image || 'default-service.jpg'}`}
+                      src={`${API}/uploads/serviceImages/${relatedService.image || 'default-service.jpg'}`}
                       alt={relatedService.title}
-                      className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = '/placeholder-service.jpg';
                       }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium text-gray-500">{relatedService.category}</span>
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">{relatedService.category}</span>
+                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
                         {formatDuration(relatedService.duration)}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{relatedService.title}</h3>
-                    <div className="flex items-center mb-3">
+                    <h3 className="font-bold text-secondary mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-300">{relatedService.title}</h3>
+                    <div className="flex items-center mb-4">
                       <CustomRating value={relatedService.averageRating || 0} readonly />
-                      <span className="text-xs text-gray-500 ml-1">({relatedService.feedback?.length || 0})</span>
+                      <span className="text-xs text-gray-600 ml-2 bg-gray-50 px-2 py-1 rounded-full">({relatedService.feedback?.length || 0})</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-baseline">
-                        <CurrencyRupeeIcon className="w-4 h-4 text-gray-600" />
-                        <span className="text-lg font-bold text-gray-800">
+                        <CurrencyRupeeIcon className="w-5 h-5 text-secondary" />
+                        <span className="text-xl font-bold text-secondary ml-1">
                           {relatedService.basePrice?.toFixed(2) || '0.00'}
                         </span>
                       </div>
-                      <button className="text-blue-600 text-sm font-medium hover:underline flex items-center">
+                      <button className="text-primary font-semibold text-sm hover:text-accent transition-colors duration-300 flex items-center group-hover:translate-x-1 transition-transform duration-300">
                         View Details
                         <ChevronRightIcon className="w-4 h-4 ml-1" />
                       </button>

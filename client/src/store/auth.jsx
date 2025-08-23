@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
             } else if (finalRole === 'provider') {
                 navigate(userObj.approved ? '/provider/dashboard' : '/pending-approval');
             } else {
-                navigate('/customer/dashboard');
+                navigate('/customer/services');
             }
 
         } catch (error) {

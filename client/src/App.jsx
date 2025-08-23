@@ -38,7 +38,6 @@ import ProviderDashboard from "./pages/Provider/Dashboard";
 import ProviderTestPage from "./pages/Provider/Test";
 
 // Customer Pages
-import CustomerDashboard from "./pages/Customer/Dashboard";
 import BookService from "./pages/Customer/Book-Service";
 import ServiceListingPage from "./pages/Customer/Services";
 import ServiceDetailPage from "./pages/Customer/Servicedetail";
@@ -98,9 +97,7 @@ const App = () => {
         {/* Protected customer routes */}
         <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
           <Route path="/customer" element={<CustomerLayout />}>
-            <Route index element={<CustomerDashboard />} />
             <Route path="profile" element={<UserProfile />} />
-            <Route path="dashboard" element={<CustomerDashboard />} />
             <Route path="services" element={<ServiceListingPage />} />
 
             {/* service in detail */}
