@@ -20,12 +20,9 @@ const providerSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: [true, 'Mobile number is required'],
-        validate: {
-            validator: function (v) {
-                return /^[0-9]{10}$/.test(v);
-            },
-            message: props => `${props.value} is not a valid 10-digit mobile number!`
-        }
+        maxlength: [10, 'Mobile number cannot exceed 10 characters'],
+        match: [/^\+?[0-9]{7,15}$/, 'Please enter a valid mobile number'],
+        
     },
     password: {
         type: String,

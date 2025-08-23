@@ -98,6 +98,15 @@ exports.completeRegistration = async (req, res) => {
             });
         }
 
+        // Validate phone number format (simple validation - at least 10 digits)
+        const phoneRegex = /^\d{10,10}$/; // Allows 10-10 digits
+        if (!phoneRegex.test(phone.replace(/\D/g, ''))) { // Remove non-digits before validation
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid phone number (10-15 digits)'
+            });
+        }
+
         // Verify OTP
         try {
             verifyOTP(email, otp);
@@ -155,7 +164,7 @@ exports.completeRegistration = async (req, res) => {
             // Update existing incomplete provider
             existingIncompleteProvider.password = password;
             existingIncompleteProvider.name = name;
-            existingIncompleteProvider.phone = phone;
+            existingIncompleteProvider.phone = phone.replace(/\D/g, ''); // Store only digits
             existingIncompleteProvider.dateOfBirth = dob;
             provider = await existingIncompleteProvider.save();
         } else {
@@ -164,7 +173,7 @@ exports.completeRegistration = async (req, res) => {
                 email,
                 password,
                 name,
-                phone,
+                phone: phone.replace(/\D/g, ''), // Store only digits
                 dateOfBirth: dob,
                 profileComplete: false // Mark as incomplete
             });
@@ -189,15 +198,6 @@ exports.completeRegistration = async (req, res) => {
     } catch (error) {
         console.error('Complete registration error:', error);
         
-        // Handle specific validation errors
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            return res.status(400).json({
-                success: false,
-                message: 'Validation error',
-                errors: messages
-            });
-        }
         
         res.status(500).json({
             success: false,
@@ -393,6 +393,36 @@ exports.completeProfile = async (req, res) => {
         });
     } catch (error) {
         console.error('Complete profile error:', error);
+        
+        // Handle mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = {};
+            const errorMessages = [];
+            
+            // Extract specific field errors
+            for (let field in error.errors) {
+                const fieldError = error.errors[field];
+                validationErrors[field] = fieldError.message;
+                errorMessages.push(fieldError.message);
+            }
+            
+            return res.status(400).json({
+                success: false,
+                message: errorMessages.length === 1 ? errorMessages[0] : 'Please fix the following errors',
+                errors: validationErrors,
+                fieldErrors: errorMessages
+            });
+        }
+        
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                success: false,
+                message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Failed to complete profile',
@@ -904,6 +934,38 @@ exports.deleteAccount = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to delete account',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+/**
+ * @desc    Get service categories from Provider model enum
+ * @route   GET /api/providers/service-categories
+ * @access  Public
+ */
+exports.getServiceCategories = async (req, res) => {
+    try {
+        // Get the service enum values from the Provider schema
+        const serviceEnum = Provider.schema.paths.services.enumValues;
+        
+        // Format the response to match frontend expectations
+        const serviceCategories = serviceEnum.map(service => ({
+            _id: service.toLowerCase().replace(/\s+/g, '-'),
+            title: service,
+            category: service
+        }));
+
+        res.status(200).json({
+            success: true,
+            message: 'Service categories retrieved successfully',
+            data: serviceCategories
+        });
+    } catch (error) {
+        console.error('Get service categories error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get service categories',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

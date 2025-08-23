@@ -10,7 +10,7 @@ const Transaction = require("./models/Transaction-model ");
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:5173', // Your frontend origin
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'], 
   credentials: true, // Allow credentials (cookies)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

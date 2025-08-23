@@ -44,13 +44,13 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${
       scrolled 
         ? 'bg-background/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
         : 'bg-background shadow-md'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 lg:h-20 items-center">
+        <div className="flex justify-between h-16 lg:h-18 items-center">
           {/* Left side - Logo & Desktop Nav */}
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -60,7 +60,7 @@ const Navbar = () => {
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden lg:block ml-12">
+            <div className="hidden lg:block ml-8 xl:ml-12">
               <div className="flex space-x-1">
                 {navLinks.map((link) => (
                   <NavItem 
@@ -74,7 +74,7 @@ const Navbar = () => {
           </div>
 
           {/* Right side - Auth Buttons (Desktop) */}
-          <div className="hidden lg:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3">
             <ActionButton 
               icon={<FaUserPlus className="mr-2 text-sm" />} 
               text="Register" 
@@ -85,7 +85,7 @@ const Navbar = () => {
               icon={<FaSignInAlt className="mr-2 text-sm" />} 
               text="Become Provider" 
               variant="primary"
-              path="/provider-register"
+              path="/register-provider"
             />
           </div>
 
@@ -143,6 +143,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+    
   );
 };
 
@@ -201,6 +202,7 @@ const ActionButton = ({ icon, text, variant = 'primary', fullWidth = false, path
       {icon}
       {text}
     </Link>
+
   );
 };
 

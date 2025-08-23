@@ -10,6 +10,9 @@ router.post('/register/initiate', providerController.initiateRegistration);
 router.post('/register/complete', providerController.completeRegistration);
 router.post('/login-for-completion', providerController.loginForCompletion);
 
+// Service Categories Route (Public)
+router.get('/service-categories', providerController.getServiceCategories);
+
 // Profile Completion Route (Private)
 router.put('/profile/complete', 
   providerAuthMiddleware, 

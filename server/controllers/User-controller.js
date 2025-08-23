@@ -15,66 +15,232 @@ const fs = require('fs');
 /**
  * Register a new user with OTP verification
  */
+/**
+ * Validation helper functions
+ */
+const validateName = (name) => {
+    if (!name || typeof name !== 'string') {
+        return "Name is required";
+    }
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+        return "Name must be at least 2 characters long";
+    }
+    if (trimmedName.length > 50) {
+        return "Name must not exceed 50 characters";
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        return "Name can only contain letters and spaces";
+    }
+    return null;
+};
+
+const validateEmail = (email) => {
+    if (!email || typeof email !== 'string') {
+        return "Email is required";
+    }
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        return "Please provide a valid email address";
+    }
+    return null;
+};
+
+const validatePhone = (phone) => {
+    if (!phone || typeof phone !== 'string') {
+        return "Phone number is required";
+    }
+    const trimmedPhone = phone.trim().replace(/\s+/g, '');
+    // Indian mobile number validation (10 digits starting with 6-9)
+    if (!/^[6-9]\d{9}$/.test(trimmedPhone)) {
+        return "Please provide a valid 10-digit Indian mobile number";
+    }
+    return null;
+};
+
+const validatePassword = (password) => {
+    if (!password || typeof password !== 'string') {
+        return "Password is required";
+    }
+    if (password.length < 8) {
+        return "Password must be at least 8 characters long";
+    }
+    if (password.length > 128) {
+        return "Password must not exceed 128 characters";
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+        return "Password must contain at least one lowercase letter";
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+        return "Password must contain at least one uppercase letter";
+    }
+    if (!/(?=.*\d)/.test(password)) {
+        return "Password must contain at least one number";
+    }
+    return null;
+};
+
+const validateAddress = (address) => {
+    const errors = {};
+    
+    if (!address || typeof address !== 'object') {
+        return { address: "Address information is required" };
+    }
+
+    // Validate street
+    if (!address.street || typeof address.street !== 'string') {
+        errors['address.street'] = "Street address is required";
+    } else if (address.street.trim().length < 5) {
+        errors['address.street'] = "Street address must be at least 5 characters long";
+    } else if (address.street.trim().length > 100) {
+        errors['address.street'] = "Street address must not exceed 100 characters";
+    }
+
+    // Validate city
+    if (!address.city || typeof address.city !== 'string') {
+        errors['address.city'] = "City is required";
+    } else if (address.city.trim().length < 2) {
+        errors['address.city'] = "City must be at least 2 characters long";
+    } else if (address.city.trim().length > 50) {
+        errors['address.city'] = "City must not exceed 50 characters";
+    } else if (!/^[a-zA-Z\s]+$/.test(address.city.trim())) {
+        errors['address.city'] = "City can only contain letters and spaces";
+    }
+
+    // Validate pincode
+    if (!address.pincode || typeof address.pincode !== 'string') {
+        errors['address.pincode'] = "Pincode is required";
+    } else if (!/^\d{6}$/.test(address.pincode.trim())) {
+        errors['address.pincode'] = "Pincode must be a valid 6-digit number";
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
+};
+
+/**
+ * Comprehensive validation function
+ */
+const validateRegistrationData = (data) => {
+    const errors = {};
+
+    // Validate individual fields
+    const nameError = validateName(data.name);
+    if (nameError) errors.name = nameError;
+
+    const emailError = validateEmail(data.email);
+    if (emailError) errors.email = emailError;
+
+    const phoneError = validatePhone(data.phone);
+    if (phoneError) errors.phone = phoneError;
+
+    const passwordError = validatePassword(data.password);
+    if (passwordError) errors.password = passwordError;
+
+    // Validate address if provided (required for final registration)
+    if (data.address) {
+        const addressErrors = validateAddress(data.address);
+        if (addressErrors) {
+            Object.assign(errors, addressErrors);
+        }
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
+};
+
 const register = async (req, res) => {
     try {
         const { name, email, phone, password, otp, address, profilePicUrl } = req.body;
 
-        // Validate email format
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        // Step 1: Validate basic registration data
+        const validationErrors = validateRegistrationData({ name, email, phone, password, address });
+        
+        if (validationErrors) {
             return res.status(400).json({
                 success: false,
-                message: "Please provide a valid email address"
+                message: "Validation failed",
+                errors: validationErrors
             });
         }
 
-        // Check if user exists
+        // Check if user already exists
         const userExists = await User.findOne({
-            $or: [{ email }]
+            $or: [
+                { email: email.trim().toLowerCase() },
+                { phone: phone.trim().replace(/\s+/g, '') }
+            ]
         });
 
         if (userExists) {
+            const errors = {};
+            if (userExists.email === email.trim().toLowerCase()) {
+                errors.email = "Email is already registered";
+            }
+            if (userExists.phone === phone.trim().replace(/\s+/g, '')) {
+                errors.phone = "Phone number is already registered";
+            }
+            
             return res.status(400).json({
                 success: false,
-                message: "Email  already registered"
+                message: "User already exists",
+                errors
             });
         }
 
-        // OTP handling
+        // Step 2: Handle OTP flow
         if (!otp) {
+            // Send OTP for email verification
             try {
-                await sendOTP(email);
+                await sendOTP(email.trim().toLowerCase());
                 return res.json({
                     success: true,
-                    message: "OTP sent to email"
+                    message: "OTP sent to your email address"
                 });
             } catch (error) {
+                console.error("OTP sending error:", error);
                 return res.status(400).json({
                     success: false,
-                    message: error.message
+                    message: "Failed to send OTP. Please try again.",
+                    errors: { otp: "Unable to send verification code" }
                 });
             }
         }
 
-        // Verify OTP
-        try {
-            verifyOTP(email, otp);
-        } catch (error) {
+        // Step 3: Verify OTP and complete registration
+        if (!address) {
             return res.status(400).json({
                 success: false,
-                message: error.message
+                message: "Address information is required for registration",
+                errors: { address: "Complete address information is required" }
             });
         }
 
-        // Create user
-        const user = await User.create({
-            name,
-            email,
-            password,
-            phone,
-            address,
+        try {
+            verifyOTP(email.trim().toLowerCase(), otp);
+        } catch (error) {
+            console.error("OTP verification error:", error);
+            return res.status(400).json({
+                success: false,
+                message: "OTP verification failed",
+                errors: { otp: error.message || "Invalid or expired OTP" }
+            });
+        }
+
+        // Create user with validated and sanitized data
+        const userData = {
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            password: password,
+            phone: phone.trim().replace(/\s+/g, ''),
+            address: {
+                street: address.street.trim(),
+                city: address.city.trim(),
+                pincode: address.pincode.trim()
+            },
             profilePicUrl,
             role: 'customer'
-        });
+        };
+
+        const user = await User.create(userData);
 
         // Generate JWT token
         const token = user.generateJWT();
@@ -94,13 +260,41 @@ const register = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: "Registration successful",
+            message: "Registration completed successfully",
             token,
             user: userResponse
         });
 
     } catch (error) {
         console.error("Registration error:", error);
+        
+        // Handle mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const errors = {};
+            Object.keys(error.errors).forEach(key => {
+                errors[key] = error.errors[key].message;
+            });
+            
+            return res.status(400).json({
+                success: false,
+                message: "Validation failed",
+                errors
+            });
+        }
+
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            const errors = {};
+            errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is already registered`;
+            
+            return res.status(400).json({
+                success: false,
+                message: "User already exists",
+                errors
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: "Internal server error. Please try again later."
