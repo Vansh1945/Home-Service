@@ -5,7 +5,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaArrowLeft, FaCheckCircle, FaPlus, FaMinus, FaMapMarkerAlt, FaTag, FaClock, FaCalendarAlt } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaPlus, FaMinus, FaMapMarkerAlt, FaTag, FaClock, FaCalendarAlt, FaShieldAlt, FaLock, FaCreditCard } from 'react-icons/fa';
+import razorpayLogo from '../../assets/razorpay.png';
 
 const BookService = () => {
   const { serviceId } = useParams();
@@ -745,6 +746,50 @@ const BookService = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Security Information Section */}
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-secondary mb-3 flex items-center">
+                    <FaShieldAlt className="mr-2 text-primary" />
+                    Secure Booking
+                  </h3>
+                  
+                  {/* Razorpay Logo */}
+                  <div className="flex items-center justify-center p-3 bg-gray-50 rounded-lg border border-gray-200 mb-3">
+                    <img 
+                      src={razorpayLogo} 
+                      alt="Razorpay Secure Payment Gateway" 
+                      className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity duration-200"
+                    />
+                  </div>
+
+                  {/* Security Features */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <FaLock className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span className="text-xs font-medium text-secondary">SSL Secure</span>
+                    </div>
+                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <FaShieldAlt className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span className="text-xs font-medium text-secondary">Protected</span>
+                    </div>
+                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <FaCreditCard className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span className="text-xs font-medium text-secondary">Bank Grade</span>
+                    </div>
+                    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <FaCheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                      <span className="text-xs font-medium text-secondary">Verified</span>
+                    </div>
+                  </div>
+
+                  {/* Security Description */}
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-secondary/70 leading-relaxed text-center">
+                      Your booking and payment information is encrypted and secure. We use industry-standard security measures.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -761,7 +806,7 @@ const BookService = () => {
                 {/* Date and Time */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-secondary mb-2 flex items-center">
+                    <label className="block text-sm font-semibold text-secondary mb-2 items-center">
                       <FaCalendarAlt className="mr-2 text-primary" />
                       Booking Date *
                     </label>
@@ -778,7 +823,7 @@ const BookService = () => {
                     <p className="text-xs text-secondary/60 mt-1">Available for next 3 days only</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-secondary mb-2 flex items-center">
+                    <label className="block text-sm font-semibold text-secondary mb-2 items-center">
                       <FaClock className="mr-2 text-primary" />
                       Time Slot *
                     </label>
@@ -846,7 +891,7 @@ const BookService = () => {
 
                 {/* Address Selection */}
                 <div>
-                  <label className="block text-sm font-semibold text-secondary mb-3 flex items-center">
+                  <label className="block text-sm font-semibold text-secondary mb-3 items-center">
                     <FaMapMarkerAlt className="mr-2 text-primary" />
                     Service Address *
                   </label>

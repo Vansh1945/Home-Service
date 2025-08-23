@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import {
   FaArrowLeft,
   FaCreditCard,
@@ -15,11 +16,9 @@ import {
   FaShieldAlt,
   FaLock,
   FaTools,
-  FaInfoCircle,
-  FaSpinner
+  FaInfoCircle
 } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { FiChevronRight, FiCheck, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiCheck } from 'react-icons/fi';
 import razorpayLogo from '../../assets/razorpay.png';
 
 const BookingConfirmation = () => {
@@ -480,7 +479,7 @@ const BookingConfirmation = () => {
           bookingDate: bookingDetails?.date || ''
         },
         theme: {
-          color: '#2563eb',
+          color: '#0D9488',
           backdrop_color: 'rgba(0, 0, 0, 0.7)'
         },
         modal: {
@@ -572,49 +571,6 @@ const BookingConfirmation = () => {
     }
   };
 
-  // Helper function to check if booking can be reactivated
-  const canReactivateBooking = () => {
-    if (!bookingDetails) return false;
-    
-
-    if (bookingDetails.status === 'cancelled') {
-      const bookingDate = new Date(bookingDetails.date);
-      const now = new Date();
-      
-      return bookingDate > now && bookingDetails.paymentStatus !== 'paid';
-    }
-    
-    return false;
-  };
-
-  // Function to reactivate cancelled booking
-  const reactivateBooking = async () => {
-    if (!canReactivateBooking()) return;
-    
-    try {
-      
-      const response = await axios.put(
-        `${API}/booking/${bookingDetails._id}/reactivate`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (response.data?.success) {
-        bookingDetails.status = 'pending';
-        showToast('Booking reactivated successfully! You can now proceed with payment.', 'success');
-      } else {
-        throw new Error(response.data?.message || 'Failed to reactivate booking');
-      }
-    } catch (error) {
-      console.error('Error reactivating booking:', error);
-      showToast(error.response?.data?.message || 'Failed to reactivate booking', 'error');
-    }
-  };
 
   // Get service details with proper fallbacks
   const getServiceInfo = () => {
@@ -659,7 +615,7 @@ const BookingConfirmation = () => {
 
   // Get booking status display info
   const getBookingStatusInfo = () => {
-    if (!bookingDetails) return { message: 'Loading...', color: 'text-gray-600', canPay: false };
+    if (!bookingDetails) return { message: 'Loading...', color: 'text-secondary/60', canPay: false };
     
     switch (bookingDetails.status) {
       case 'pending':
@@ -667,14 +623,14 @@ const BookingConfirmation = () => {
         if (bookingDetails.paymentStatus === 'paid') {
           return {
             message: 'Payment Complete - Awaiting Provider',
-            color: 'text-blue-600',
+            color: 'text-primary',
             canPay: false,
             description: 'Your payment has been processed successfully. We are now finding a provider to accept your booking. You will be notified once a provider accepts your request.'
           };
         } else {
           return {
             message: 'Pending Provider Acceptance',
-            color: 'text-amber-600',
+            color: 'text-accent',
             canPay: true,
             description: 'Your booking is waiting for a provider to accept it. Complete payment to secure your booking.'
           };
@@ -682,7 +638,7 @@ const BookingConfirmation = () => {
       case 'accepted':
         return {
           message: 'Accepted by Provider',
-          color: 'text-green-600',
+          color: 'text-primary',
           canPay: bookingDetails.paymentStatus !== 'paid',
           description: bookingDetails.paymentStatus === 'paid' 
             ? 'Great! A provider has accepted your booking and payment is complete. The provider will contact you soon to confirm service details.'
@@ -691,21 +647,21 @@ const BookingConfirmation = () => {
       case 'confirmed':
         return {
           message: 'Booking Confirmed',
-          color: 'text-green-600',
+          color: 'text-primary',
           canPay: bookingDetails.paymentStatus !== 'paid',
           description: 'Your booking is confirmed. Payment is required to secure your slot.'
         };
       case 'in-progress':
         return {
           message: 'Service In Progress',
-          color: 'text-blue-500',
+          color: 'text-primary',
           canPay: bookingDetails.paymentStatus !== 'paid' && bookingDetails.paymentMethod === 'cash',
           description: 'The service is currently being performed. Cash payment can be made upon completion.'
         };
       case 'completed':
         return {
           message: 'Service Completed',
-          color: 'text-green-600',
+          color: 'text-primary',
           canPay: bookingDetails.paymentStatus !== 'paid' && bookingDetails.paymentMethod === 'cash',
           description: bookingDetails.paymentStatus !== 'paid' 
             ? 'Service completed successfully. Please complete your cash payment.'
@@ -716,9 +672,7 @@ const BookingConfirmation = () => {
           message: 'Booking Cancelled',
           color: 'text-red-600',
           canPay: false,
-          description: canReactivateBooking() 
-            ? 'This booking was cancelled but can be reactivated since the service date is still in the future.'
-            : 'This booking has been cancelled and cannot be reactivated.'
+          description: 'This booking has been cancelled and cannot be reactivated.'
         };
       case 'no-show':
         return {
@@ -735,7 +689,7 @@ const BookingConfirmation = () => {
         
         return {
           message: statusDisplay,
-          color: 'text-gray-600',
+          color: 'text-secondary/60',
           canPay: ['pending', 'accepted', 'confirmed'].includes(bookingDetails.status) && bookingDetails.paymentStatus !== 'paid',
           description: `Booking status: ${statusDisplay}. ${
             ['pending', 'accepted', 'confirmed'].includes(bookingDetails.status) && bookingDetails.paymentStatus !== 'paid'
@@ -749,15 +703,10 @@ const BookingConfirmation = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-primary/5 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
-          />
-          <h2 className="text-xl font-semibold text-secondary mb-2">Loading Booking Details...</h2>
-          <p className="text-secondary/60">Please wait while we fetch your booking information</p>
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-secondary/70">Loading booking details...</p>
         </div>
       </div>
     );
@@ -766,34 +715,26 @@ const BookingConfirmation = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-primary/5 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
-          >
-            <FaExclamationTriangle className="w-8 h-8 text-red-500" />
-          </motion.div>
-          <h2 className="text-xl font-semibold text-secondary mb-2">Oops! Something went wrong</h2>
-          <p className="text-secondary/60 mb-6">{error}</p>
-          <div className="space-y-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto p-8 bg-background rounded-2xl shadow-lg border border-gray-100">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-red-200">
+            <FaExclamationTriangle className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-secondary mb-3">Something went wrong</h2>
+          <p className="text-secondary/70 mb-8 leading-relaxed">{error}</p>
+          <div className="space-y-4">
+            <button
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+              className="w-full px-6 py-4 bg-primary text-background rounded-xl font-semibold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Try Again
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            </button>
+            <button
               onClick={() => navigate('/customer/bookings')}
-              className="w-full px-6 py-3 bg-gray-100 text-secondary rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              className="w-full px-6 py-4 bg-secondary/10 text-secondary rounded-xl font-semibold hover:bg-secondary/20 transition-all duration-200"
             >
               Go to My Bookings
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
@@ -803,25 +744,19 @@ const BookingConfirmation = () => {
   // No booking details state
   if (!bookingDetails) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-primary/5 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4"
-          >
-            <FaInfoCircle className="w-8 h-8 text-amber-500" />
-          </motion.div>
-          <h2 className="text-xl font-semibold text-secondary mb-2">Booking Not Found</h2>
-          <p className="text-secondary/60 mb-6">We couldn't find the booking details you're looking for.</p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto p-8 bg-background rounded-2xl shadow-lg border border-gray-100">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-primary/20">
+            <FaInfoCircle className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-secondary mb-3">Booking Not Found</h2>
+          <p className="text-secondary/70 mb-8 leading-relaxed">We couldn't find the booking details you're looking for.</p>
+          <button
             onClick={() => navigate('/customer/services')}
-            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+            className="px-8 py-4 bg-primary text-background rounded-xl font-semibold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Book a New Service
-          </motion.button>
+          </button>
         </div>
       </div>
     );
@@ -830,471 +765,385 @@ const BookingConfirmation = () => {
   const serviceInfo = getServiceInfo();
 
   return (
-    <div className="min-h-screen bg-white/80 backdrop-blur-sm py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-          className="mb-8"
-        >
-          <motion.button
-            whileHover={{ x: -2, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        <div className="mb-8">
+          <button
             onClick={() => navigate(-1)}
-            className="group flex items-center text-primary hover:text-primary/80 transition-all duration-200 mb-6 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-primary/10"
+            className="group flex items-center text-primary hover:text-primary/80 transition-all duration-200 mb-6 hover:scale-105"
           >
-            <FaArrowLeft className="mr-2 w-4 h-4" />
-            <span className="font-medium">Back</span>
-          </motion.button>
+            <FaArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
+            Back to services
+          </button>
 
-          <div className="relative">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="text-3xl lg:text-4xl font-bold text-secondary mb-2"
-            >
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl lg:text-4xl font-bold text-secondary mb-2">
               Complete Your Booking
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="text-lg text-secondary/70 mb-4"
-            >
-              Review your booking details and complete payment securely
-            </motion.p>
+            </h1>
+            <p className="text-secondary/60 text-lg">Review your booking details and complete payment securely</p>
           </div>
-        </motion.div>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Booking Summary */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
             {/* Service Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-primary/10 transition-all duration-300 hover:shadow-xl hover:border-primary/20"
-            >
-              <div className="p-6 lg:p-8">
-                <h2 className="text-xl font-semibold text-secondary mb-6 flex items-center">
-                  <span className="bg-primary/10 text-primary p-2 rounded-lg mr-3">
-                    <FiCheck className="w-5 h-5" />
-                  </span>
-                  Booking Summary
-                </h2>
+            <div className="bg-background rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center">
+                <FaCalendarAlt className="mr-3 text-primary" />
+                Booking Summary
+              </h2>
 
-                {/* Service Details */}
-                <div className="flex items-start mb-6 pb-6 border-b border-primary/10">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-primary/5 flex items-center justify-center">
-                    {serviceInfo.image ? (
-                      <img
-                        src={serviceInfo.image}
-                        alt={serviceInfo.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-service.jpg';
-                        }}
-                      />
-                    ) : (
-                      <FaTools className="w-6 h-6 text-primary" />
-                    )}
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-semibold text-secondary">
-                      {serviceInfo.title}
-                    </h3>
-                    <p className="text-sm text-secondary/60 capitalize mb-2">
-                      {serviceInfo.category}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {serviceInfo.duration && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
-                          {serviceInfo.duration}h duration
-                        </span>
-                      )}
-                      {bookingDetails?.services?.[0]?.quantity > 1 && (
-                        <span className="text-xs bg-accent/10 text-accent px-2 py-1 rounded-full font-medium">
-                          Qty: {bookingDetails.services[0].quantity}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Booking Details */}
-                <div className="space-y-3">
-                  <motion.div
-                    whileHover={{ x: 2, scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 group"
-                  >
-                    <div className="bg-primary/10 p-2 rounded-lg text-primary mr-3 group-hover:bg-primary/20 transition-colors duration-200">
-                      <FaCalendarAlt className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-secondary/60 font-medium">Date & Time</p>
-                      <p className="font-semibold text-secondary">
-                        {formatDate(bookingDetails.date)}
-                        {bookingDetails.time && ` at ${bookingDetails.time}`}
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  {bookingDetails.address && (
-                    <motion.div
-                      whileHover={{ x: 2, scale: 1.01 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-start p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 group"
-                    >
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary mr-3 group-hover:bg-primary/20 transition-colors duration-200">
-                        <FaMapMarkerAlt className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-secondary/60 font-medium">Service Address</p>
-                        <p className="font-semibold text-secondary">
-                          {[
-                            bookingDetails.address.street,
-                            bookingDetails.address.city,
-                            bookingDetails.address.state,
-                            bookingDetails.address.postalCode
-                          ].filter(Boolean).join(', ')}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {bookingDetails.notes && (
-                    <motion.div
-                      whileHover={{ x: 2, scale: 1.01 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-start p-3 rounded-lg hover:bg-primary/5 transition-all duration-200 group"
-                    >
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary mr-3 group-hover:bg-primary/20 transition-colors duration-200">
-                        <FaClock className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-secondary/60 font-medium">Special Instructions</p>
-                        <p className="font-semibold text-secondary">{bookingDetails.notes}</p>
-                      </div>
-                    </motion.div>
+              {/* Service Details */}
+              <div className="flex items-start mb-6 pb-6 border-b border-gray-100">
+                <div className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-gray-50 shadow-md">
+                  {serviceInfo.image ? (
+                    <img
+                      src={serviceInfo.image}
+                      alt={serviceInfo.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-service.jpg';
+                      }}
+                    />
+                  ) : (
+                    <FaTools className="w-8 h-8 text-primary" />
                   )}
                 </div>
-
-                {/* Booking Status */}
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ duration: 0.2 }}
-                  className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10 backdrop-blur-sm"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-secondary/80">Booking Status</p>
-                      <p className={`text-lg font-bold ${getBookingStatusInfo().color}`}>
-                        {getBookingStatusInfo().message}
-                      </p>
-                      <p className="text-sm text-secondary/70 mt-1 leading-relaxed">
-                        {getBookingStatusInfo().description}
-                      </p>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-sm">
-                      <div className={`w-3 h-3 rounded-full ${
-                        bookingDetails.status === 'pending' ? 'bg-amber-400 animate-pulse' :
-                        bookingDetails.status === 'accepted' ? 'bg-primary animate-pulse' :
-                        bookingDetails.status === 'confirmed' ? 'bg-green-500 animate-pulse' :
-                        bookingDetails.status === 'in-progress' ? 'bg-primary animate-bounce' :
-                        bookingDetails.status === 'completed' ? 'bg-green-400' :
-                        bookingDetails.status === 'cancelled' ? 'bg-red-400' :
-                        bookingDetails.status === 'no-show' ? 'bg-red-500' : 'bg-gray-400'
-                      }`}></div>
-                    </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-xl font-bold text-secondary mb-1">{serviceInfo.title}</h3>
+                  <p className="text-sm text-primary font-medium capitalize bg-primary/10 px-2 py-1 rounded-full inline-block">
+                    {serviceInfo.category?.toLowerCase()}
+                  </p>
+                  <div className="flex items-center mt-2 text-secondary/60">
+                    <FaClock className="mr-1 text-xs" />
+                    <span className="text-sm">{serviceInfo.duration} hours</span>
                   </div>
-                  
-                  {/* Reactivation Option for Cancelled Bookings */}
-                  {bookingDetails.status === 'cancelled' && canReactivateBooking() && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4 pt-4 border-t border-primary/20"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-green-700">Good News!</p>
-                          <p className="text-xs text-green-600">This booking can be reactivated</p>
-                        </div>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={reactivateBooking}
-                          className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors duration-200"
-                        >
-                          Reactivate Booking
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Payment Information Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-primary/10 transition-all duration-300 hover:shadow-xl hover:border-primary/20"
-            >
-              <div className="p-6 lg:p-8">
-                <h2 className="text-xl font-semibold text-secondary mb-6 flex items-center">
-                  <span className="bg-primary/10 text-primary p-2 rounded-lg mr-3">
-                    <FaCreditCard className="w-5 h-5" />
-                  </span>
-                  Payment Information
-                </h2>
-
-                {/* Payment Status Display */}
-                <div className="mb-6 p-4 bg-primary/5 rounded-lg border border-primary/10 backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary mr-3">
-                        <FaCreditCard className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-secondary">Payment Status</h3>
-                        <p className={`text-sm font-medium ${bookingDetails.paymentStatus === 'paid' ? 'text-green-600' : 'text-amber-600'}`}>
-                          {bookingDetails.paymentMethod === 'online' && bookingDetails.paymentStatus === 'paid'
-                            ? 'Paid Online'
-                            : bookingDetails.paymentMethod === 'cash'
-                              ? 'Cash Payment (Pay on Service)'
-                              : bookingDetails.paymentStatus === 'pending'
-                                ? 'Payment Pending'
-                                : bookingDetails.paymentStatus || 'Not Specified'}
-                        </p>
-                        <p className="text-xs text-secondary/60 mt-1">
-                          Payment Method: {bookingDetails.paymentMethod ? bookingDetails.paymentMethod.charAt(0).toUpperCase() + bookingDetails.paymentMethod.slice(1) : 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">₹{(bookingDetails.totalAmount || 0).toFixed(2)}</p>
-                      <p className="text-xs text-secondary/60">Total Amount</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Razorpay Trust Badge */}
-                <div className="mb-6 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-primary/10">
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <img 
-                        src={razorpayLogo} 
-                        alt="Razorpay" 
-                        className="h-6 w-auto opacity-80"
-                      />
-                      <span className="text-sm text-secondary/70 font-medium">Secure Payment Gateway</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <FaShieldAlt className="w-4 h-4 text-green-500" />
-                      <span className="text-xs text-secondary/60">SSL Secured</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons - Only show if payment is needed */}
-                {getBookingStatusInfo().canPay ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleOnlinePayment}
-                        className="bg-primary text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center group"
-                      >
-                        <FaCreditCard className="mr-2 w-4 h-4" />
-                        Pay Online Now
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleCashPayment}
-                        className="bg-accent text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center group"
-                      >
-                        <FaMoneyBillWave className="mr-2 w-4 h-4" />
-                        Confirm Cash Payment
-                      </motion.button>
-                    </div>
-
-                    <div className="flex items-center justify-center text-xs text-secondary/60">
-                      <FaLock className="mr-1 w-3 h-3" />
-                      <span>Your payment is secured with 256-bit SSL encryption</span>
-                    </div>
-                    
-                    {/* Additional info for specific statuses */}
-                    {bookingDetails.status === 'in-progress' && (
-                      <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-                        <div className="flex items-center text-primary">
-                          <FaInfoCircle className="mr-2 flex-shrink-0 w-4 h-4" />
-                          <p className="text-sm">
-                            Service is currently in progress. You can complete payment now or pay cash after service completion.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {bookingDetails.status === 'completed' && bookingDetails.paymentStatus !== 'paid' && (
-                      <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                        <div className="flex items-center text-green-700">
-                          <FaCheckCircle className="mr-2 flex-shrink-0 w-4 h-4" />
-                          <p className="text-sm">
-                            Service completed successfully! Please complete your payment to close this booking.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-4 bg-primary/5 rounded-lg text-center border border-primary/10"
-                  >
-                    <div className="flex items-center justify-center mb-2">
-                      {bookingDetails.status === 'cancelled' ? (
-                        <FaExclamationTriangle className="text-red-500 mr-2 w-5 h-5" />
-                      ) : bookingDetails.status === 'completed' ? (
-                        <FaCheckCircle className="text-green-500 mr-2 w-5 h-5" />
-                      ) : (
-                        <FaInfoCircle className="text-primary mr-2 w-5 h-5" />
-                      )}
-                    </div>
-                    <p className="text-secondary/70 mb-2">
-                      {getBookingStatusInfo().description}
-                    </p>
-                    {bookingDetails.status === 'cancelled' && !canReactivateBooking() && (
-                      <p className="text-sm text-secondary/60">
-                        {bookingDetails.paymentStatus === 'paid' 
-                          ? 'A refund will be processed if applicable.' 
-                          : 'You can book a new service from our services page.'}
-                      </p>
-                    )}
-                    {bookingDetails.status === 'completed' && (
-                      <p className="text-sm text-secondary/60">
-                        Thank you for using our service! You can leave feedback if you haven't already.
-                      </p>
-                    )}
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Price Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-primary/10 sticky top-6 transition-all duration-300 hover:shadow-xl hover:border-primary/20"
-            >
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center">
-                  <span className="bg-primary/10 text-primary p-2 rounded-lg mr-3">
-                    <FaTag className="w-4 h-4" />
-                  </span>
-                  Price Summary
-                </h3>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
-                    <span className="text-secondary/70 font-medium">Service Price:</span>
-                    <span className="font-semibold text-secondary">
-                      ₹{(serviceInfo.price || bookingDetails.totalAmount || 0).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {bookingDetails.services?.[0]?.quantity > 1 && (
-                    <div className="flex justify-between text-sm p-3 bg-primary/5 rounded-lg">
-                      <span className="text-secondary/60">
+                  {bookingDetails?.services?.[0]?.quantity > 1 && (
+                    <div className="mt-2">
+                      <span className="text-sm bg-accent/15 text-accent px-3 py-1 rounded-full font-semibold">
                         Quantity: {bookingDetails.services[0].quantity}
                       </span>
-                      <span className="text-secondary/60">
-                        ₹{((serviceInfo.price || bookingDetails.totalAmount || 0) / (bookingDetails.services[0].quantity || 1)).toFixed(2)} each
-                      </span>
                     </div>
                   )}
+                </div>
+              </div>
 
-                  {bookingDetails.couponApplied && bookingDetails.totalDiscount > 0 && (
-                    <motion.div
-                      whileHover={{ scale: 1.01 }}
-                      className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200"
-                    >
-                      <div className="flex items-center">
-                        <FaTag className="w-3 h-3 mr-2 text-green-600" />
-                        <span className="text-green-600 font-medium text-sm">Discount ({bookingDetails.couponApplied.code}):</span>
-                      </div>
-                      <span className="font-semibold text-green-600">-₹{(bookingDetails.totalDiscount || 0).toFixed(2)}</span>
-                    </motion.div>
-                  )}
+              {/* Booking Details */}
+              <div className="space-y-4">
+                <div className="flex items-center p-4 rounded-xl hover:bg-gray-50 transition-all duration-200">
+                  <div className="bg-primary/10 p-3 rounded-lg text-primary mr-4">
+                    <FaCalendarAlt className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-secondary/60 font-medium mb-1">Date & Time</p>
+                    <p className="font-semibold text-secondary">
+                      {formatDate(bookingDetails.date)}
+                      {bookingDetails.time && ` at ${bookingDetails.time}`}
+                    </p>
+                  </div>
+                </div>
 
-                  <div className="border-t border-primary/20 pt-3 mt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-secondary">Total Amount:</span>
-                      <span className="text-xl font-bold text-primary">₹{(bookingDetails.totalAmount || 0).toFixed(2)}</span>
+                {bookingDetails.address && (
+                  <div className="flex items-start p-4 rounded-xl hover:bg-gray-50 transition-all duration-200">
+                    <div className="bg-primary/10 p-3 rounded-lg text-primary mr-4">
+                      <FaMapMarkerAlt className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-secondary/60 font-medium mb-1">Service Address</p>
+                      <p className="font-semibold text-secondary">
+                        {[
+                          bookingDetails.address.street,
+                          bookingDetails.address.city,
+                          bookingDetails.address.state,
+                          bookingDetails.address.postalCode
+                        ].filter(Boolean).join(', ')}
+                      </p>
                     </div>
                   </div>
+                )}
 
-                  {/* Payment Status */}
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="border-t border-primary/20 pt-3 mt-3 p-3 bg-primary/5 rounded-lg"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-secondary/70 font-medium text-sm">Payment Status:</span>
-                      <span className={`font-semibold text-sm ${bookingDetails.paymentStatus === 'paid' ? 'text-green-600' : 'text-amber-600'}`}>
+                {bookingDetails.notes && (
+                  <div className="flex items-start p-4 rounded-xl hover:bg-gray-50 transition-all duration-200">
+                    <div className="bg-primary/10 p-3 rounded-lg text-primary mr-4">
+                      <FaClock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-secondary/60 font-medium mb-1">Special Instructions</p>
+                      <p className="font-semibold text-secondary">{bookingDetails.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Booking Status */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-secondary/80 mb-1">Booking Status</p>
+                    <p className={`text-lg font-bold ${getBookingStatusInfo().color} mb-2`}>
+                      {getBookingStatusInfo().message}
+                    </p>
+                    <p className="text-sm text-secondary/70 leading-relaxed">
+                      {getBookingStatusInfo().description}
+                    </p>
+                  </div>
+                  <div className="bg-background p-2 rounded-lg shadow-sm border border-gray-200">
+                    <div className={`w-3 h-3 rounded-full ${
+                      bookingDetails.status === 'pending' ? 'bg-accent animate-pulse' :
+                      bookingDetails.status === 'accepted' ? 'bg-primary animate-pulse' :
+                      bookingDetails.status === 'confirmed' ? 'bg-primary animate-pulse' :
+                      bookingDetails.status === 'in-progress' ? 'bg-primary animate-bounce' :
+                      bookingDetails.status === 'completed' ? 'bg-primary' :
+                      bookingDetails.status === 'cancelled' ? 'bg-red-400' :
+                      bookingDetails.status === 'no-show' ? 'bg-red-500' : 'bg-secondary/40'
+                    }`}></div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+
+            {/* Payment Information Section */}
+            <div className="bg-background rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center">
+                <FaCreditCard className="mr-3 text-primary" />
+                Payment Information
+              </h2>
+
+              {/* Payment Status Display */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 p-3 rounded-lg text-primary mr-4">
+                      <FaCreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-secondary mb-1">Payment Status</h3>
+                      <p className={`text-sm font-medium ${bookingDetails.paymentStatus === 'paid' ? 'text-primary' : 'text-accent'}`}>
                         {bookingDetails.paymentMethod === 'online' && bookingDetails.paymentStatus === 'paid'
                           ? 'Paid Online'
                           : bookingDetails.paymentMethod === 'cash'
-                            ? 'Pending (Pay on Service)'
+                            ? 'Cash Payment (Pay on Service)'
                             : bookingDetails.paymentStatus === 'pending'
-                              ? 'Pending'
-                              : bookingDetails.paymentStatus}
-                      </span>
+                              ? 'Payment Pending'
+                              : bookingDetails.paymentStatus || 'Not Specified'}
+                      </p>
+                      <p className="text-xs text-secondary/60 mt-1">
+                        Payment Method: {bookingDetails.paymentMethod ? bookingDetails.paymentMethod.charAt(0).toUpperCase() + bookingDetails.paymentMethod.slice(1) : 'Not specified'}
+                      </p>
                     </div>
-                  </motion.div>
-
-                  {/* Payment Security Info */}
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/10"
-                  >
-                    <div className="flex items-center mb-2">
-                      <div className="bg-primary/10 p-1 rounded text-primary mr-2">
-                        <FaLock className="w-3 h-3" />
-                      </div>
-                      <span className="text-sm font-semibold text-secondary">Secure Payment</span>
-                    </div>
-                    <p className="text-xs text-secondary/70 leading-relaxed mb-3">
-                      Your payment information is encrypted and secure. We use industry-standard security measures to protect your data.
-                    </p>
-                    <div className="flex items-center justify-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <FaShieldAlt className="w-3 h-3 text-green-500" />
-                        <span className="text-xs text-secondary/60 font-medium">SSL Secured</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <FaCreditCard className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-secondary/60 font-medium">PCI DSS</span>
-                      </div>
-                    </div>
-                  </motion.div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary">₹{(bookingDetails.totalAmount || 0).toFixed(2)}</p>
+                    <p className="text-xs text-secondary/60 font-medium">Total Amount</p>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+
+              {/* Action Buttons - Only show if payment is needed */}
+              {getBookingStatusInfo().canPay ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                      onClick={handleOnlinePayment}
+                      className="w-full sm:w-auto bg-primary hover:bg-accent text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                    >
+                      <FaCreditCard className="w-5 h-5" />
+                      Pay Online Now
+                    </button>
+
+                    <button
+                      onClick={handleCashPayment}
+                      className="w-full sm:w-auto bg-accent hover:bg-primary text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                    >
+                      <FaMoneyBillWave className="w-5 h-5" />
+                      Confirm Cash Payment
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center text-sm text-secondary/60 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <FaLock className="mr-2 w-4 h-4" />
+                    <span className="font-medium">Your payment is secured with 256-bit SSL encryption</span>
+                  </div>
+                  
+                  {/* Additional info for specific statuses */}
+                  {bookingDetails.status === 'in-progress' && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center text-blue-700">
+                        <FaInfoCircle className="mr-3 flex-shrink-0 w-5 h-5" />
+                        <p className="text-sm font-medium">
+                          Service is currently in progress. You can complete payment now or pay cash after service completion.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {bookingDetails.status === 'completed' && bookingDetails.paymentStatus !== 'paid' && (
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center text-green-700">
+                        <FaCheckCircle className="mr-3 flex-shrink-0 w-5 h-5" />
+                        <p className="text-sm font-medium">
+                          Service completed successfully! Please complete your payment to close this booking.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 bg-gray-50 rounded-lg text-center border border-gray-200">
+                  <div className="flex items-center justify-center mb-4">
+                    {bookingDetails.status === 'cancelled' ? (
+                      <FaExclamationTriangle className="text-red-500 mr-3 w-6 h-6" />
+                    ) : bookingDetails.status === 'completed' ? (
+                      <FaCheckCircle className="text-primary mr-3 w-6 h-6" />
+                    ) : (
+                      <FaInfoCircle className="text-primary mr-3 w-6 h-6" />
+                    )}
+                  </div>
+                  <p className="text-secondary/70 mb-3 font-medium">
+                    {getBookingStatusInfo().description}
+                  </p>
+                  {bookingDetails.status === 'cancelled' && (
+                    <p className="text-sm text-secondary/60">
+                      {bookingDetails.paymentStatus === 'paid' 
+                        ? 'A refund will be processed if applicable.' 
+                        : 'You can book a new service from our services page.'}
+                    </p>
+                  )}
+                  {bookingDetails.status === 'completed' && (
+                    <p className="text-sm text-secondary/60">
+                      Thank you for using our service! You can leave feedback if you haven't already.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6 relative">
+            {/* Price Summary */}
+            <div className="bg-background rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-xl font-bold text-secondary mb-4 flex items-center">
+                <FaTag className="mr-3 text-primary" />
+                Price Summary
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-secondary/70 font-medium">Service Price:</span>
+                  <span className="font-semibold text-secondary">
+                    ₹{(serviceInfo.price || bookingDetails.totalAmount || 0).toFixed(2)}
+                  </span>
+                </div>
+
+                {bookingDetails.services?.[0]?.quantity > 1 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary/60 font-medium">
+                      Quantity: {bookingDetails.services[0].quantity}
+                    </span>
+                    <span className="text-secondary/60 font-medium">
+                      ₹{((serviceInfo.price || bookingDetails.totalAmount || 0) / (bookingDetails.services[0].quantity || 1)).toFixed(2)} each
+                    </span>
+                  </div>
+                )}
+
+                {bookingDetails.couponApplied && bookingDetails.totalDiscount > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center">
+                      <FaTag className="w-4 h-4 mr-2 text-green-600" />
+                      <span className="text-green-700 font-medium text-sm">Discount ({bookingDetails.couponApplied.code}):</span>
+                    </div>
+                    <span className="font-semibold text-green-700">-₹{(bookingDetails.totalDiscount || 0).toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-secondary">Total Amount:</span>
+                    <span className="text-xl font-bold text-primary">₹{(bookingDetails.totalAmount || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Payment Status */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-secondary/70 font-medium text-sm">Payment Status:</span>
+                    <span className={`font-semibold text-sm ${bookingDetails.paymentStatus === 'paid' ? 'text-primary' : 'text-accent'}`}>
+                      {bookingDetails.paymentMethod === 'online' && bookingDetails.paymentStatus === 'paid'
+                        ? 'Paid Online'
+                        : bookingDetails.paymentMethod === 'cash'
+                          ? 'Pending (Pay on Service)'
+                          : bookingDetails.paymentStatus === 'pending'
+                            ? 'Pending'
+                            : bookingDetails.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Secure Payment Section */}
+            <div className="bg-background rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-xl font-bold text-secondary mb-4 flex items-center">
+                <FaShieldAlt className="mr-3 text-primary" />
+                Secure Payment
+              </h3>
+
+              <div className="space-y-4">
+                {/* Razorpay Logo */}
+                <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <img 
+                    src={razorpayLogo} 
+                    alt="Razorpay Secure Payment Gateway" 
+                    className="h-30 w-40 opacity-90 hover:opacity-100 transition-opacity duration-200"
+                  />
+                </div>
+
+                {/* Security Features */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <FaLock className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-xs font-medium text-secondary">256-bit SSL</span>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <FaShieldAlt className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-xs font-medium text-secondary">PCI DSS</span>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <FaCreditCard className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-xs font-medium text-secondary">Bank Grade</span>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <FaCheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-xs font-medium text-secondary">Verified</span>
+                  </div>
+                </div>
+
+                {/* Security Description */}
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-secondary/70 leading-relaxed text-center">
+                    Your payment information is encrypted and secure. We use industry-standard security measures to protect your data and ensure safe transactions.
+                  </p>
+                </div>
+
+                {/* Accepted Payment Methods */}
+                <div className="text-center">
+                  <p className="text-sm text-secondary/60 mb-2 font-medium">Accepted Payment Methods</p>
+                  <div className="flex items-center justify-center space-x-3 text-secondary/50">
+                    <span className="text-xs font-medium">Cards</span>
+                    <span className="w-1 h-1 bg-secondary/30 rounded-full"></span>
+                    <span className="text-xs font-medium">UPI</span>
+                    <span className="w-1 h-1 bg-secondary/30 rounded-full"></span>
+                    <span className="text-xs font-medium">Net Banking</span>
+                    <span className="w-1 h-1 bg-secondary/30 rounded-full"></span>
+                    <span className="text-xs font-medium">Wallets</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
