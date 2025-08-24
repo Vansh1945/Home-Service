@@ -209,6 +209,8 @@ const ServicesPage = () => {
                             <span className="font-semibold text-white text-lg">Professional Electrical Services</span>
                         </motion.div>
 
+
+
                         {/* Enhanced Title */}
                         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 text-white leading-tight">
                             Expert <span className="text-accent">Electrical</span>

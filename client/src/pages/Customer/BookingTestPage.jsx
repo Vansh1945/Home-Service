@@ -1,6 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useAuth } from '../../store/auth';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import {
   Calendar,
   Clock,
@@ -29,193 +27,183 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 
-const CustomerBookingsPage = () => {
-  const { token, API, showToast, user } = useAuth();
-  const navigate = useNavigate();
-  
+// Mock data for testing
+const mockBookings = [
+  {
+    _id: '1',
+    services: [{
+      serviceDetails: {
+        title: 'Electrical Wiring Installation',
+        category: 'electrical',
+        duration: 3,
+        image: null,
+        basePrice: 2500
+      },
+      quantity: 1,
+      price: 2500
+    }],
+    date: new Date('2024-08-25'),
+    time: '10:00',
+    status: 'pending',
+    paymentStatus: 'pending',
+    paymentMethod: 'online',
+    totalAmount: 2500,
+    confirmedBooking: false,
+    address: {
+      street: '123 Main Street',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      postalCode: '400001'
+    },
+    createdAt: new Date('2024-08-24'),
+    providerDetails: null
+  },
+  {
+    _id: '2',
+    services: [{
+      serviceDetails: {
+        title: 'AC Repair Service',
+        category: 'electrical',
+        duration: 2,
+        image: null,
+        basePrice: 1500
+      },
+      quantity: 1,
+      price: 1500
+    }],
+    date: new Date('2024-08-23'),
+    time: '14:00',
+    status: 'accepted',
+    paymentStatus: 'paid',
+    paymentMethod: 'online',
+    totalAmount: 1500,
+    confirmedBooking: true,
+    address: {
+      street: '456 Park Avenue',
+      city: 'Delhi',
+      state: 'Delhi',
+      postalCode: '110001'
+    },
+    createdAt: new Date('2024-08-20'),
+    providerDetails: {
+      name: 'Raj Electrical Services',
+      phone: '+91-9876543210',
+      rating: 4.5
+    }
+  },
+  {
+    _id: '3',
+    services: [{
+      serviceDetails: {
+        title: 'Fan Installation',
+        category: 'electrical',
+        duration: 1,
+        image: null,
+        basePrice: 800
+      },
+      quantity: 2,
+      price: 800
+    }],
+    date: new Date('2024-08-20'),
+    time: '16:00',
+    status: 'completed',
+    paymentStatus: 'paid',
+    paymentMethod: 'cash',
+    totalAmount: 1600,
+    confirmedBooking: true,
+    address: {
+      street: '789 Garden Road',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      postalCode: '560001'
+    },
+    createdAt: new Date('2024-08-18'),
+    providerDetails: {
+      name: 'Expert Electricians',
+      phone: '+91-9876543211',
+      rating: 4.8
+    }
+  },
+  {
+    _id: '4',
+    services: [{
+      serviceDetails: {
+        title: 'Switch Board Repair',
+        category: 'electrical',
+        duration: 2,
+        image: null,
+        basePrice: 1200
+      },
+      quantity: 1,
+      price: 1200
+    }],
+    date: new Date('2024-08-15'),
+    time: '11:00',
+    status: 'cancelled',
+    paymentStatus: 'refunded',
+    paymentMethod: 'online',
+    totalAmount: 1200,
+    confirmedBooking: false,
+    address: {
+      street: '321 Tech Park',
+      city: 'Pune',
+      state: 'Maharashtra',
+      postalCode: '411001'
+    },
+    createdAt: new Date('2024-08-14'),
+    providerDetails: null
+  }
+];
+
+const BookingTestPage = () => {
   // State variables
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [bookings] = useState(mockBookings);
+  const [loading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedBooking, setExpandedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleBooking, setRescheduleBooking] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async (showRefreshLoader = false) => {
-    try {
-      if (showRefreshLoader) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      const response = await fetch(`${API}/booking/customer`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      // Process bookings and fetch additional details
-      const processedBookings = await Promise.all(
-        data.data.map(async (booking) => {
-          const processedBooking = {
-            ...booking,
-            status: booking.status || 'pending',
-          };
-
-          // Fetch provider details if available
-          if (booking.provider && ['accepted', 'in_progress', 'completed'].includes(booking.status)) {
-            try {
-              const providerId = typeof booking.provider === 'object' ? booking.provider._id || booking.provider.id : booking.provider;
-              
-              if (providerId) {
-                const providerResponse = await fetch(`${API}/booking/providers/${providerId}`, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
-                });
-
-                if (providerResponse.ok) {
-                  const providerData = await providerResponse.json();
-                  processedBooking.providerDetails = providerData.data;
-                }
-              }
-            } catch (providerError) {
-              console.error('Error fetching provider details:', providerError);
-            }
-          }
-
-          // Fetch service details
-          if (booking.services && booking.services.length > 0) {
-            try {
-              const servicesWithDetails = await Promise.all(
-                booking.services.map(async (serviceItem) => {
-                  try {
-                    const serviceId = serviceItem.service?._id || serviceItem.service;
-                    if (!serviceId) return serviceItem;
-
-                    const serviceResponse = await fetch(`${API}/service/services/${serviceId}`, {
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                      },
-                    });
-
-                    if (serviceResponse.ok) {
-                      const serviceData = await serviceResponse.json();
-                      return {
-                        ...serviceItem,
-                        serviceDetails: serviceData.data
-                      };
-                    }
-                    return serviceItem;
-                  } catch (serviceError) {
-                    console.error('Error fetching service details:', serviceError);
-                    return serviceItem;
-                  }
-                })
-              );
-              processedBooking.services = servicesWithDetails;
-            } catch (servicesError) {
-              console.error('Error processing services:', servicesError);
-            }
-          }
-
-          return processedBooking;
-        })
-      );
-
-      setBookings(processedBookings);
-    } catch (error) {
-      console.error('Fetch bookings error:', error.message);
-      showToast(`Error fetching bookings: ${error.message}`, 'error');
-      setBookings([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const fetchBookingDetails = async (bookingId) => {
-    try {
-      const response = await fetch(`${API}/booking/${bookingId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch booking details: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setSelectedBooking(data.data);
-      setShowModal(true);
-    } catch (error) {
-      console.error('Fetch booking details error:', error.message);
-      showToast(`Error fetching booking details: ${error.message}`, 'error');
-    }
-  };
-
-  const handlePayNow = (booking) => {
-    navigate(`/customer/booking-confirm/${booking._id}`, {
-      state: {
-        booking,
-        service: booking.services?.[0]?.serviceDetails,
-        coupon: booking.couponApplied
-      }
+  // Helper functions
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Not specified';
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
-  const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-
-    try {
-      const response = await fetch(`${API}/booking/user/${bookingId}/cancel`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reason: 'Customer requested cancellation'
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to cancel booking');
-      }
-
-      showToast('Booking cancelled successfully', 'success');
-      fetchBookings();
-    } catch (error) {
-      console.error('Cancel booking error:', error.message);
-      showToast(`Error cancelling booking: ${error.message}`, 'error');
-    }
+  const formatTime = (timeStr) => {
+    if (!timeStr) return 'To be confirmed';
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
   };
 
-  const callProvider = (phoneNumber) => {
-    if (!phoneNumber) {
-      showToast('Provider phone number not available', 'warning');
-      return;
-    }
-    window.location.href = `tel:${phoneNumber}`;
+  const needsPayment = (booking) => {
+    return booking.paymentStatus === 'pending' && !booking.confirmedBooking;
+  };
+
+  const canCancelBooking = (booking) => {
+    return ['pending', 'accepted'].includes(booking.status);
+  };
+
+  const canRescheduleBooking = (booking) => {
+    return booking.status === 'pending';
+  };
+
+  const isActiveBooking = (booking) => {
+    return ['pending', 'accepted', 'in_progress', 'in-progress', 'payment_pending'].includes(booking.status);
   };
 
   const getStatusColor = (status) => {
@@ -278,41 +266,40 @@ const CustomerBookingsPage = () => {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Not specified';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (timeStr) => {
-    if (!timeStr) return 'To be confirmed';
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
-  };
-
-  const needsPayment = (booking) => {
-    return (
-      booking.paymentStatus === 'pending' &&
-      !booking.confirmedBooking
-    );
-  };
-
-  const canCancelBooking = (booking) => {
-    return ['pending', 'accepted'].includes(booking.status);
-  };
-
-  const isActiveBooking = (booking) => {
-    return ['pending', 'accepted', 'in_progress', 'in-progress', 'payment_pending'].includes(booking.status);
+  // Filter bookings based on time
+  const filterBookingsByTime = (bookings, timeFilter) => {
+    if (timeFilter === 'all') return bookings;
+    
+    const now = new Date();
+    const filterDate = new Date();
+    
+    switch (timeFilter) {
+      case '7days':
+        filterDate.setDate(now.getDate() - 7);
+        break;
+      case '1month':
+        filterDate.setMonth(now.getMonth() - 1);
+        break;
+      case '6months':
+        filterDate.setMonth(now.getMonth() - 6);
+        break;
+      case '1year':
+        filterDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        return bookings;
+    }
+    
+    return bookings.filter(booking => new Date(booking.createdAt) >= filterDate);
   };
 
   const getFilteredBookings = () => {
-    return bookings
+    let filtered = bookings;
+    
+    // Apply time filter first
+    filtered = filterBookingsByTime(filtered, timeFilter);
+    
+    return filtered
       .filter((booking) => {
         // Status filter
         if (statusFilter === 'upcoming' && !['pending', 'accepted'].includes(booking.status)) return false;
@@ -330,6 +317,22 @@ const CustomerBookingsPage = () => {
   };
 
   const filteredBookings = getFilteredBookings();
+
+  // Handle reschedule
+  const handleReschedule = (booking) => {
+    setRescheduleBooking(booking);
+    setRescheduleDate(booking.date.toISOString().split('T')[0]);
+    setRescheduleTime(booking.time || '');
+    setShowRescheduleModal(true);
+  };
+
+  const submitReschedule = () => {
+    // In real app, this would call the API
+    console.log('Rescheduling booking:', rescheduleBooking._id, 'to', rescheduleDate, rescheduleTime);
+    setShowRescheduleModal(false);
+    setRescheduleBooking(null);
+    alert('Booking rescheduled successfully! (This is a demo)');
+  };
 
   // Timeline Component
   const BookingTimeline = ({ booking }) => {
@@ -446,21 +449,7 @@ const CustomerBookingsPage = () => {
           <div className="flex items-start space-x-4 flex-1">
             {/* Service Image */}
             <div className="flex-shrink-0">
-              {booking.services?.[0]?.serviceDetails?.image ? (
-                <img
-                  src={booking.services[0].serviceDetails.image}
-                  alt={booking.services[0]?.serviceDetails?.title || 'Service'}
-                  className="w-16 h-16 rounded-xl object-cover border-2 border-gray-100"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div
-                className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center border-2 border-primary/20"
-                style={booking.services?.[0]?.serviceDetails?.image ? { display: 'none' } : {}}
-              >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center border-2 border-primary/20">
                 <Wrench className="w-8 h-8 text-primary" />
               </div>
             </div>
@@ -518,10 +507,25 @@ const CustomerBookingsPage = () => {
           </div>
         </div>
 
+        {/* Pending Booking Message */}
+        {booking.status === 'pending' && !booking.confirmedBooking && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 text-amber-600 mr-2" />
+              <p className="text-sm text-amber-800 font-medium">
+                Please confirm booking so provider can be assigned
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
           <button
-            onClick={() => fetchBookingDetails(booking._id)}
+            onClick={() => {
+              setSelectedBooking(booking);
+              setShowModal(true);
+            }}
             className="flex items-center space-x-1 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors border border-primary/20"
           >
             <Eye className="w-4 h-4" />
@@ -530,7 +534,7 @@ const CustomerBookingsPage = () => {
 
           {needsPayment(booking) && (
             <button
-              onClick={() => handlePayNow(booking)}
+              onClick={() => alert('Redirecting to payment page... (Demo)')}
               className="flex items-center space-x-1 text-sm font-medium text-white bg-gradient-to-r from-accent to-accent hover:from-accent/90 hover:to-accent/90 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm"
             >
               <CreditCard className="w-4 h-4" />
@@ -538,9 +542,19 @@ const CustomerBookingsPage = () => {
             </button>
           )}
 
-          {booking.status !== 'pending' && booking.status !== 'cancelled' && (booking.providerDetails?.phone || booking.provider?.phone) && (
+          {canRescheduleBooking(booking) && (
             <button
-              onClick={() => callProvider(booking.providerDetails?.phone || booking.provider?.phone)}
+              onClick={() => handleReschedule(booking)}
+              className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors border border-blue-200"
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>Reschedule</span>
+            </button>
+          )}
+
+          {booking.status !== 'pending' && booking.status !== 'cancelled' && booking.status !== 'completed' && booking.providerDetails?.phone && (
+            <button
+              onClick={() => alert(`Calling ${booking.providerDetails.phone}... (Demo)`)}
               className="flex items-center space-x-1 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors border border-primary/20"
             >
               <Phone className="w-4 h-4" />
@@ -550,7 +564,7 @@ const CustomerBookingsPage = () => {
 
           {canCancelBooking(booking) && (
             <button
-              onClick={() => handleCancelBooking(booking._id)}
+              onClick={() => alert('Booking cancelled! (Demo)')}
               className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors border border-red-200"
             >
               Cancel
@@ -655,196 +669,6 @@ const CustomerBookingsPage = () => {
     </div>
   );
 
-  // Booking Details Modal
-  const BookingModal = ({ booking, onClose }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-bold text-secondary">Booking Details</h2>
-              <p className="text-sm text-gray-500">ID: #{booking._id.slice(-8).toUpperCase()}</p>
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
-              ×
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {/* Service Details */}
-          <div className="border border-gray-200 rounded-xl p-4">
-            <h3 className="font-semibold text-secondary mb-4 flex items-center">
-              <Package className="w-5 h-5 mr-2 text-primary" />
-              Service Details
-            </h3>
-            <div className="flex mb-4">
-              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                {booking.services?.[0]?.serviceDetails?.image ? (
-                  <img
-                    src={booking.services[0].serviceDetails.image}
-                    alt={booking.services[0]?.serviceDetails?.title || 'Service'}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <Package className="w-10 h-10 text-gray-400" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-secondary mb-1">{booking.services?.[0]?.serviceDetails?.title || 'Unknown Service'}</h4>
-                <p className="text-sm text-gray-500 capitalize mb-2">{booking.services?.[0]?.serviceDetails?.category || 'N/A'}</p>
-                <p className="text-sm text-gray-600">{booking.services?.[0]?.serviceDetails?.description || 'No description available'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Booking Information */}
-          <div className="border border-gray-200 rounded-xl p-4">
-            <h3 className="font-semibold text-secondary mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-primary" />
-              Booking Information
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-500">Date</p>
-                <p className="text-sm font-medium">{formatDate(booking.date)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Time</p>
-                <p className="text-sm font-medium">{formatTime(booking.time)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Status</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(booking.status)}`}>
-                  {getStatusText(booking.status)}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Payment Status</p>
-                <p className={`text-sm font-medium ${booking.paymentStatus === 'paid' ? 'text-primary' : 'text-accent'}`}>
-                  {booking.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Price Breakdown */}
-          <div className="border border-gray-200 rounded-xl p-4">
-            <h3 className="font-semibold text-secondary mb-4 flex items-center">
-              <DollarSign className="w-5 h-5 mr-2 text-primary" />
-              Price Details
-            </h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Service Price:</span>
-                <span className="font-medium">₹{booking.subtotal || booking.totalAmount}</span>
-              </div>
-              {booking.totalDiscount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount:</span>
-                  <span>-₹{booking.totalDiscount}</span>
-                </div>
-              )}
-              <div className="border-t pt-2 flex justify-between font-semibold">
-                <span>Total Amount:</span>
-                <span className="text-primary">₹{booking.totalAmount}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          {booking.address && (
-            <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="font-semibold text-secondary mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-primary" />
-                Service Address
-              </h3>
-              <p className="text-sm text-gray-700">
-                {[
-                  booking.address.street,
-                  booking.address.city,
-                  booking.address.state,
-                  booking.address.postalCode
-                ].filter(Boolean).join(', ')}
-              </p>
-            </div>
-          )}
-
-          {/* Provider Information */}
-          {booking.providerDetails && (
-            <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="font-semibold text-secondary mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2 text-primary" />
-                Provider Information
-              </h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Name:</span>
-                  <span className="font-medium">{booking.providerDetails.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Phone:</span>
-                  <span className="font-medium">{booking.providerDetails.phone}</span>
-                </div>
-                {booking.providerDetails.rating && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Rating:</span>
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                      <span className="font-medium">{booking.providerDetails.rating}/5</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Actions */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-xl">
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-            >
-              Close
-            </button>
-            
-            {needsPayment(booking) && (
-              <button
-                onClick={() => {
-                  onClose();
-                  handlePayNow(booking);
-                }}
-                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors font-medium flex items-center space-x-1"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Pay Now</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Loading Component
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-4 md:p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -858,7 +682,6 @@ const CustomerBookingsPage = () => {
               </p>
             </div>
             <button
-              onClick={() => fetchBookings(true)}
               disabled={refreshing}
               className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50"
             >
@@ -890,9 +713,9 @@ const CustomerBookingsPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Enhanced Filters */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-secondary mb-2">Filter by Status</label>
               <select
@@ -905,6 +728,21 @@ const CustomerBookingsPage = () => {
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="pending_payment">Pending Payment</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary mb-2">Filter by Time</label>
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              >
+                <option value="all">All Time</option>
+                <option value="7days">Last 7 Days</option>
+                <option value="1month">Last Month</option>
+                <option value="6months">Last 6 Months</option>
+                <option value="1year">Last Year</option>
               </select>
             </div>
 
@@ -928,6 +766,7 @@ const CustomerBookingsPage = () => {
               <button
                 onClick={() => {
                   setStatusFilter('all');
+                  setTimeFilter('all');
                   setSearchTerm('');
                 }}
                 className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -947,13 +786,13 @@ const CustomerBookingsPage = () => {
               </div>
               <h3 className="text-xl font-medium text-secondary mb-2">No bookings found</h3>
               <p className="text-gray-500 mb-6">
-                {statusFilter !== 'all' || searchTerm
+                {statusFilter !== 'all' || timeFilter !== 'all' || searchTerm
                   ? 'Try adjusting your filters to see more results'
                   : "You haven't made any bookings yet. Start exploring our services!"}
               </p>
-              {statusFilter === 'all' && !searchTerm && (
+              {statusFilter === 'all' && timeFilter === 'all' && !searchTerm && (
                 <button
-                  onClick={() => navigate('/services')}
+                  onClick={() => alert('Redirecting to services... (Demo)')}
                   className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium"
                 >
                   Browse Services
@@ -979,12 +818,233 @@ const CustomerBookingsPage = () => {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Booking Details Modal */}
       {showModal && selectedBooking && (
-        <BookingModal booking={selectedBooking} onClose={() => setShowModal(false)} />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold text-secondary">Booking Details</h2>
+                  <p className="text-sm text-gray-500">ID: #{selectedBooking._id.slice(-8).toUpperCase()}</p>
+                </div>
+                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Service Details */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <h3 className="font-semibold text-secondary mb-4 flex items-center">
+                  <Package className="w-5 h-5 mr-2 text-primary" />
+                  Service Details
+                </h3>
+                <div className="flex mb-4">
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                    <Package className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-secondary mb-1">{selectedBooking.services?.[0]?.serviceDetails?.title || 'Unknown Service'}</h4>
+                    <p className="text-sm text-gray-500 capitalize mb-2">{selectedBooking.services?.[0]?.serviceDetails?.category || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Professional electrical service</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Information */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <h3 className="font-semibold text-secondary mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-primary" />
+                  Booking Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Date</p>
+                    <p className="text-sm font-medium">{formatDate(selectedBooking.date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Time</p>
+                    <p className="text-sm font-medium">{formatTime(selectedBooking.time)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedBooking.status)}`}>
+                      {getStatusText(selectedBooking.status)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Payment Status</p>
+                    <p className={`text-sm font-medium ${selectedBooking.paymentStatus === 'paid' ? 'text-primary' : 'text-accent'}`}>
+                      {selectedBooking.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <h3 className="font-semibold text-secondary mb-4 flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2 text-primary" />
+                  Price Details
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Service Price:</span>
+                    <span className="font-medium">₹{selectedBooking.totalAmount}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between font-semibold">
+                    <span>Total Amount:</span>
+                    <span className="text-primary">₹{selectedBooking.totalAmount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              {selectedBooking.address && (
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <h3 className="font-semibold text-secondary mb-4 flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-primary" />
+                    Service Address
+                  </h3>
+                  <p className="text-sm text-gray-700">
+                    {[
+                      selectedBooking.address.street,
+                      selectedBooking.address.city,
+                      selectedBooking.address.state,
+                      selectedBooking.address.postalCode
+                    ].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {/* Provider Information */}
+              {selectedBooking.providerDetails && (
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <h3 className="font-semibold text-secondary mb-4 flex items-center">
+                    <User className="w-5 h-5 mr-2 text-primary" />
+                    Provider Information
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Name:</span>
+                      <span className="font-medium">{selectedBooking.providerDetails.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Phone:</span>
+                      <span className="font-medium">{selectedBooking.providerDetails.phone}</span>
+                    </div>
+                    {selectedBooking.providerDetails.rating && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Rating:</span>
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                          <span className="font-medium">{selectedBooking.providerDetails.rating}/5</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-xl">
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Close
+                </button>
+                
+                {needsPayment(selectedBooking) && (
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      alert('Redirecting to payment... (Demo)');
+                    }}
+                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors font-medium flex items-center space-x-1"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay Now</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Modal */}
+      {showRescheduleModal && rescheduleBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold text-secondary">Reschedule Booking</h2>
+                  <p className="text-sm text-gray-500">ID: #{rescheduleBooking._id.slice(-8).toUpperCase()}</p>
+                </div>
+                <button onClick={() => setShowRescheduleModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">New Date</label>
+                <input
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">New Time</label>
+                <input
+                  type="time"
+                  value={rescheduleTime}
+                  onChange={(e) => setRescheduleTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center">
+                  <AlertCircle className="w-4 h-4 text-amber-600 mr-2" />
+                  <p className="text-sm text-amber-800">
+                    Rescheduling is only allowed for pending bookings at least 6 hours before the scheduled time.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowRescheduleModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReschedule}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center space-x-1"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Reschedule</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-export default CustomerBookingsPage;
+export default BookingTestPage;
