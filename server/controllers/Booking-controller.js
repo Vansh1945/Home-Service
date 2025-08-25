@@ -521,23 +521,64 @@ const updateBookingStatus = async (req, res) => {
 // Get user bookings
 const getUserBookings = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, timeFilter, searchTerm } = req.query;
     const query = { customer: req.user._id };
 
+    // Status filter
     if (status) {
-      query.status = status;
+        if (status === 'upcoming') {
+            query.status = { $in: ['pending', 'accepted', 'in-progress'] };
+        } else if (status === 'pending_payment') {
+            query.paymentStatus = 'pending';
+        } else if (status !== 'all') {
+            query.status = status;
+        }
     }
 
+    // Time filter
+    if (timeFilter && timeFilter !== 'all') {
+        const now = new Date();
+        let startDate;
+        switch (timeFilter) {
+            case '7days':
+                startDate = new Date(now.setDate(now.getDate() - 7));
+                break;
+            case '1month':
+                startDate = new Date(now.setMonth(now.getMonth() - 1));
+                break;
+            case '6months':
+                startDate = new Date(now.setMonth(now.getMonth() - 6));
+                break;
+            case '1year':
+                startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+                break;
+            default:
+                startDate = null;
+        }
+        if (startDate) {
+            query.createdAt = { $gte: startDate };
+        }
+    }
+    
     const bookings = await Booking.find(query)
-      .populate('services.service', 'title description basePrice category image duration')
+      .populate({
+        path: 'services.service',
+        select: 'title description basePrice category image duration',
+        // Search term filter on service title
+        match: searchTerm ? { title: { $regex: searchTerm, $options: 'i' } } : {}
+      })
       .populate('provider', 'name email phone businessName contactPerson rating')
       .populate('customer', 'name email phone')
       .sort({ createdAt: -1 });
 
+    // Since the match on populated field might return bookings with empty services, we filter them out.
+    const filteredBookings = bookings.filter(b => b.services && b.services.length > 0 && b.services[0].service);
+
+
     // Fetch transaction details for each booking
     const Transaction = require('../models/Transaction-model ');
     const bookingsWithTransactions = await Promise.all(
-      bookings.map(async (booking) => {
+      filteredBookings.map(async (booking) => {
         const bookingObj = booking.toObject();
 
         // Find transaction for this booking
@@ -557,10 +598,13 @@ const getUserBookings = async (req, res) => {
       })
     );
 
+    const totalBookings = await Booking.countDocuments({ customer: req.user._id });
+
     res.status(200).json({
       success: true,
       message: 'Bookings retrieved successfully',
-      data: bookingsWithTransactions
+      data: bookingsWithTransactions,
+      totalBookings: totalBookings
     });
 
   } catch (error) {

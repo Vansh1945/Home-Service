@@ -29,7 +29,7 @@ const ProviderProfile = () => {
       passbookImage: '',
       verified: false
     },
-    profilePicUrl: '',
+    providerProfile: '',
     resume: '',
     approved: false,
     kycStatus: 'pending',
@@ -286,7 +286,7 @@ const ProviderProfile = () => {
       profileData.address.postalCode,
       profileData.bankDetails.accountNo,
       profileData.bankDetails.ifsc,
-      profileData.profilePicUrl,
+      profileData.providerProfile,
       profileData.resume,
       profileData.bankDetails.passbookImage
     ];
@@ -296,28 +296,28 @@ const ProviderProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-900">Service Provider Profile</h1>
-          <p className="mt-2 text-gray-600">Manage your professional information and documents</p>
+          <h1 className="text-3xl font-bold text-primary">Service Provider Profile</h1>
+          <p className="mt-2 text-secondary">Manage your professional information and documents</p>
         </div>
 
         {/* Profile Completion Banner */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Profile Completion</h3>
-              <span className="text-2xl font-bold text-blue-600">{calculateProfileCompletion()}%</span>
+              <h3 className="text-lg font-semibold text-secondary">Profile Completion</h3>
+              <span className="text-2xl font-bold text-primary">{calculateProfileCompletion()}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
-                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                className="bg-primary h-3 rounded-full transition-all duration-300"
                 style={{ width: `${calculateProfileCompletion()}%` }}
               ></div>
             </div>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-secondary">
               Complete your profile to increase your chances of getting more bookings
             </p>
           </div>
@@ -326,7 +326,7 @@ const ProviderProfile = () => {
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+            <nav className="-mb-px flex flex-wrap space-x-8 px-6">
               {[
                 { id: 'overview', name: 'Overview', icon: '👤' },
                 { id: 'documents', name: 'Documents', icon: '📄' },
@@ -337,8 +337,8 @@ const ProviderProfile = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-secondary hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
@@ -354,43 +354,43 @@ const ProviderProfile = () => {
           <div className="space-y-6">
             {/* Service Statistics */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4">
+              <div className="bg-primary px-6 py-4">
                 <h2 className="text-xl font-semibold text-white">Service Statistics</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">{profileData.completedBookings}</div>
-                    <div className="text-sm text-gray-500">Completed Bookings</div>
+                    <div className="text-3xl font-bold text-primary">{profileData.completedBookings}</div>
+                    <div className="text-sm text-secondary">Completed Bookings</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-red-500">{profileData.canceledBookings}</div>
-                    <div className="text-sm text-gray-500">Canceled Bookings</div>
+                    <div className="text-3xl font-bold text-accent">{profileData.canceledBookings}</div>
+                    <div className="text-sm text-secondary">Canceled Bookings</div>
                   </div>
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Test Status:</span>
+                      <span className="text-sm text-secondary">Test Status:</span>
                       <span className={`text-sm font-medium ${profileData.testPassed ? 'text-green-600' : 'text-yellow-500'}`}>
                         {profileData.testPassed ? 'Passed' : 'Pending'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Account Status:</span>
+                      <span className="text-sm text-secondary">Account Status:</span>
                       <span className={`text-sm font-medium ${profileData.isActive ? 'text-green-600' : 'text-red-500'}`}>
                         {profileData.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Approval Status:</span>
+                      <span className="text-sm text-secondary">Approval Status:</span>
                       <span className={`text-sm font-medium ${profileData.approved ? 'text-green-600' : 'text-yellow-500'}`}>
                         {profileData.approved ? 'Approved' : 'Pending'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">KYC Status:</span>
+                      <span className="text-sm text-secondary">KYC Status:</span>
                       <span className={`text-sm font-medium ${
                         profileData.kycStatus === 'approved' ? 'text-green-600' : 
                         profileData.kycStatus === 'rejected' ? 'text-red-600' : 'text-yellow-500'
@@ -401,7 +401,7 @@ const ProviderProfile = () => {
                   </div>
                   {profileData.blockedTill && (
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm text-gray-600">Blocked Until:</span>
+                      <span className="text-sm text-secondary">Blocked Until:</span>
                       <span className="text-sm font-medium text-red-600">
                         {new Date(profileData.blockedTill).toLocaleDateString()}
                       </span>
@@ -413,36 +413,36 @@ const ProviderProfile = () => {
 
             {/* Account Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4">
+              <div className="bg-primary px-6 py-4">
                 <h2 className="text-xl font-semibold text-white">Account Information</h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Registration Date</h3>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <h3 className="text-sm font-medium text-secondary">Registration Date</h3>
+                    <p className="mt-1 text-sm text-secondary">
                       {profileData.registrationDate ? 
                         new Date(profileData.registrationDate).toLocaleDateString() : 
                         'Not available'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Account Age</h3>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <h3 className="text-sm font-medium text-secondary">Account Age</h3>
+                    <p className="mt-1 text-sm text-secondary">
                       {profileData.age ? `${profileData.age} years` : 'Not available'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <h3 className="text-sm font-medium text-secondary">Last Updated</h3>
+                    <p className="mt-1 text-sm text-secondary">
                       {profileData.updatedAt ? 
                         new Date(profileData.updatedAt).toLocaleDateString() : 
                         'Not available'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <h3 className="text-sm font-medium text-secondary">Member Since</h3>
+                    <p className="mt-1 text-sm text-secondary">
                       {profileData.createdAt ? 
                         new Date(profileData.createdAt).toLocaleDateString() : 
                         'Not available'}
@@ -462,7 +462,7 @@ const ProviderProfile = () => {
             {/* Recent Feedbacks */}
             {profileData.feedbacks && profileData.feedbacks.length > 0 && (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="bg-blue-900 px-6 py-4">
+                <div className="bg-primary px-6 py-4">
                   <h2 className="text-xl font-semibold text-white">Recent Customer Feedbacks</h2>
                 </div>
                 <div className="p-6">
@@ -483,11 +483,11 @@ const ProviderProfile = () => {
                                   </svg>
                                 ))}
                               </div>
-                              <span className="ml-2 text-sm text-gray-600">
+                              <span className="ml-2 text-sm text-secondary">
                                 by {feedback.customer?.name || 'Anonymous'}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-700">{feedback.comment}</p>
+                            <p className="text-sm text-secondary">{feedback.comment}</p>
                           </div>
                           <span className="text-xs text-gray-500 ml-4">
                             {new Date(feedback.createdAt).toLocaleDateString()}
@@ -506,7 +506,7 @@ const ProviderProfile = () => {
           <div className="space-y-6">
             {/* Document Center */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4">
+              <div className="bg-primary px-6 py-4">
                 <h2 className="text-xl font-semibold text-white">Document Center</h2>
               </div>
               <div className="p-6">
@@ -516,27 +516,27 @@ const ProviderProfile = () => {
                     <div className="text-center">
                       <div className="mb-4">
                         <img
-                          src={profileData.profilePicUrl ? `${API}/${profileData.profilePicUrl}` : `${API}/uploads/default-provider.jpg`}
+                          src={profileData.providerProfile ? `${API}/${profileData.providerProfile}` : `${API}/uploads/default-provider.jpg`}
                           alt="Profile"
-                          className="w-24 h-24 rounded-full mx-auto border-4 border-blue-200 object-cover"
+                          className="w-24 h-24 rounded-full mx-auto border-4 border-primary object-cover"
                           onError={(e) => {
                             e.target.src = `${API}/uploads/default-provider.jpg`;
                           }}
                         />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Profile Picture</h3>
+                      <h3 className="text-lg font-medium text-secondary mb-2">Profile Picture</h3>
                       <div className="space-y-2">
                         <div className="flex items-center justify-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            profileData.profilePicUrl ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            profileData.providerProfile ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {profileData.profilePicUrl ? 'Uploaded' : 'Default'}
+                            {profileData.providerProfile ? 'Uploaded' : 'Default'}
                           </span>
                         </div>
                         <div className="flex flex-col space-y-2">
                           <label
                             htmlFor="profilePicUpload"
-                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                           >
                             Update Photo
                           </label>
@@ -550,7 +550,7 @@ const ProviderProfile = () => {
                           {fileUploads.profilePic && (
                             <button
                               onClick={() => updateProfile('profilePic')}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium text-white"
+                              className="px-4 py-2 bg-primary hover:bg-teal-800 rounded-md text-sm font-medium text-white"
                             >
                               Save Photo
                             </button>
@@ -570,7 +570,7 @@ const ProviderProfile = () => {
                           </svg>
                         </div>
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Resume</h3>
+                      <h3 className="text-lg font-medium text-secondary mb-2">Resume</h3>
                       <div className="space-y-2">
                         <div className="flex items-center justify-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -583,14 +583,14 @@ const ProviderProfile = () => {
                           {profileData.resume && (
                             <button
                               onClick={() => viewDocument('resume')}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-teal-800 text-sm font-medium"
                             >
                               View Resume
                             </button>
                           )}
                           <label
                             htmlFor="resumeUpload"
-                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                           >
                             {profileData.resume ? 'Update Resume' : 'Upload Resume'}
                           </label>
@@ -604,7 +604,7 @@ const ProviderProfile = () => {
                           {fileUploads.resume && (
                             <button
                               onClick={() => updateProfile('resume')}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium text-white"
+                              className="px-4 py-2 bg-primary hover:bg-teal-800 rounded-md text-sm font-medium text-white"
                             >
                               Save Resume
                             </button>
@@ -624,7 +624,7 @@ const ProviderProfile = () => {
                           </svg>
                         </div>
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Bank Passbook</h3>
+                      <h3 className="text-lg font-medium text-secondary mb-2">Bank Passbook</h3>
                       <div className="space-y-2">
                         <div className="flex items-center justify-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -644,14 +644,14 @@ const ProviderProfile = () => {
                           {profileData.bankDetails.passbookImage && (
                             <button
                               onClick={() => viewDocument('passbook')}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-teal-800 text-sm font-medium"
                             >
                               View Passbook
                             </button>
                           )}
                           <label
                             htmlFor="passbookUpload"
-                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="cursor-pointer inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                           >
                             {profileData.bankDetails.passbookImage ? 'Update Passbook' : 'Upload Passbook'}
                           </label>
@@ -665,7 +665,7 @@ const ProviderProfile = () => {
                           {fileUploads.passbookImage && (
                             <button
                               onClick={() => updateProfile('bank')}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium text-white"
+                              className="px-4 py-2 bg-primary hover:bg-teal-800 rounded-md text-sm font-medium text-white"
                             >
                               Save Passbook
                             </button>
@@ -695,34 +695,34 @@ const ProviderProfile = () => {
           <div className="space-y-6">
             {/* Profile Overview Card */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4 text-center">
+              <div className="bg-primary px-6 py-4 text-center">
                 <h2 className="text-xl font-semibold text-white">Profile Overview</h2>
               </div>
               <div className="p-6">
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4">
                     <img
-                      src={`${API}/uploads/${profileData.profilePicUrl || 'default-provider.jpg'}`}
+                      src={`${API}/uploads/${profileData.providerProfile || 'default-provider.jpg'}`}
                       alt="Profile"
-                      className="w-32 h-32 rounded-full border-4 border-blue-200 object-cover"
+                      className="w-32 h-32 rounded-full border-4 border-primary object-cover"
                     />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">{profileData.name}</h3>
-                  <p className="text-blue-600">{profileData.email}</p>
-                  <p className="text-gray-600 mt-1">{profileData.phone}</p>
+                  <h3 className="text-xl font-bold text-secondary">{profileData.name}</h3>
+                  <p className="text-primary">{profileData.email}</p>
+                  <p className="text-secondary mt-1">{profileData.phone}</p>
                 </div>
 
                 <div className="mt-6 border-t border-gray-200 pt-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">ACCOUNT STATUS</h4>
+                  <h4 className="text-sm font-medium text-secondary mb-2">ACCOUNT STATUS</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Approval Status:</span>
+                      <span className="text-sm text-secondary">Approval Status:</span>
                       <span className={`text-sm font-medium ${profileData.approved ? 'text-green-600' : 'text-yellow-500'}`}>
                         {profileData.approved ? 'Approved' : 'Pending'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">KYC Status:</span>
+                      <span className="text-sm text-secondary">KYC Status:</span>
                       <span className={`text-sm font-medium ${
                         profileData.kycStatus === 'approved' ? 'text-green-600' : 
                         profileData.kycStatus === 'rejected' ? 'text-red-600' : 'text-yellow-500'
@@ -731,13 +731,13 @@ const ProviderProfile = () => {
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Profile Completion:</span>
+                      <span className="text-sm text-secondary">Profile Completion:</span>
                       <span className={`text-sm font-medium ${profileData.profileComplete ? 'text-green-600' : 'text-yellow-500'}`}>
                         {calculateProfileCompletion()}%
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Bank Verification:</span>
+                      <span className="text-sm text-secondary">Bank Verification:</span>
                       <span className={`text-sm font-medium ${profileData.bankDetails.verified ? 'text-green-600' : 'text-yellow-500'}`}>
                         {profileData.bankDetails.verified ? 'Verified' : 'Pending'}
                       </span>
@@ -749,12 +749,12 @@ const ProviderProfile = () => {
 
             {/* Basic Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4 flex justify-between items-center">
+              <div className="bg-primary px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">Basic Information</h2>
                 <button
                   onClick={() => setEditMode({ ...editMode, basic: !editMode.basic })}
                   className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    editMode.basic ? 'bg-white text-blue-600' : 'bg-yellow-400 text-blue-900 hover:bg-yellow-500'
+                    editMode.basic ? 'bg-white text-primary' : 'bg-accent text-white hover:bg-orange-500'
                   }`}
                 >
                   {editMode.basic ? 'Cancel' : 'Edit'}
@@ -766,19 +766,19 @@ const ProviderProfile = () => {
                   <form onSubmit={(e) => { e.preventDefault(); updateProfile('basic'); }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Full Name</label>
                         <input
                           type="text"
                           name="name"
                           value={profileData.name}
                           onChange={(e) => handleChange(e)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Email</label>
                         <input
                           type="email"
                           value={profileData.email}
@@ -788,25 +788,25 @@ const ProviderProfile = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Phone</label>
                         <input
                           type="tel"
                           name="phone"
                           value={profileData.phone}
                           onChange={(e) => handleChange(e)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Date of Birth</label>
                         <input
                           type="date"
                           name="dateOfBirth"
                           value={profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().split('T')[0] : ''}
                           onChange={(e) => handleChange(e)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                     </div>
@@ -815,13 +815,13 @@ const ProviderProfile = () => {
                       <button
                         type="button"
                         onClick={() => setEditMode({ ...editMode, basic: false })}
-                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       >
                         Save Changes
                       </button>
@@ -830,23 +830,23 @@ const ProviderProfile = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.name}</p>
+                      <h3 className="text-sm font-medium text-secondary">Full Name</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.name}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.email}</p>
+                      <h3 className="text-sm font-medium text-secondary">Email</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.email}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.phone || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Phone</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.phone || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Date of Birth</h3>
-                      <p className="mt-1 text-sm text-gray-900">
+                      <h3 className="text-sm font-medium text-secondary">Date of Birth</h3>
+                      <p className="mt-1 text-sm text-secondary">
                         {profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : 'Not provided'}
                       </p>
                     </div>
@@ -857,12 +857,12 @@ const ProviderProfile = () => {
 
             {/* Professional Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4 flex justify-between items-center">
+              <div className="bg-primary px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">Professional Information</h2>
                 <button
                   onClick={() => setEditMode({ ...editMode, professional: !editMode.professional })}
                   className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    editMode.professional ? 'bg-white text-blue-600' : 'bg-yellow-400 text-blue-900 hover:bg-yellow-500'
+                    editMode.professional ? 'bg-white text-primary' : 'bg-accent text-white hover:bg-orange-500'
                   }`}
                 >
                   {editMode.professional ? 'Cancel' : 'Edit'}
@@ -874,12 +874,12 @@ const ProviderProfile = () => {
                   <form onSubmit={(e) => { e.preventDefault(); updateProfile('professional'); }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Service Type</label>
                         <select
                           name="services"
                           value={profileData.services}
                           onChange={(e) => handleChange(e)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="">Select Service</option>
                           <option value="Electrical">Electrical</option>
@@ -890,7 +890,7 @@ const ProviderProfile = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Experience (years)</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Experience (years)</label>
                         <input
                           type="number"
                           name="experience"
@@ -898,18 +898,18 @@ const ProviderProfile = () => {
                           onChange={(e) => handleChange(e)}
                           min="0"
                           max="40"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Service Area</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Service Area</label>
                         <input
                           type="text"
                           name="serviceArea"
                           value={profileData.serviceArea || ''}
                           onChange={(e) => handleChange(e)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                     </div>
@@ -918,13 +918,13 @@ const ProviderProfile = () => {
                       <button
                         type="button"
                         onClick={() => setEditMode({ ...editMode, professional: false })}
-                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       >
                         Save Changes
                       </button>
@@ -933,20 +933,20 @@ const ProviderProfile = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Service Type</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.services || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Service Type</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.services || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Experience</h3>
-                      <p className="mt-1 text-sm text-gray-900">
+                      <h3 className="text-sm font-medium text-secondary">Experience</h3>
+                      <p className="mt-1 text-sm text-secondary">
                         {profileData.experience ? `${profileData.experience} years` : 'Not provided'}
                       </p>
                     </div>
 
                     <div className="md:col-span-2">
-                      <h3 className="text-sm font-medium text-gray-500">Service Area</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.serviceArea || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Service Area</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.serviceArea || 'Not provided'}</p>
                     </div>
                   </div>
                 )}
@@ -955,12 +955,12 @@ const ProviderProfile = () => {
 
             {/* Address Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4 flex justify-between items-center">
+              <div className="bg-primary px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">Address Information</h2>
                 <button
                   onClick={() => setEditMode({ ...editMode, address: !editMode.address })}
                   className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    editMode.address ? 'bg-white text-blue-600' : 'bg-yellow-400 text-blue-900 hover:bg-yellow-500'
+                    editMode.address ? 'bg-white text-primary' : 'bg-accent text-white hover:bg-orange-500'
                   }`}
                 >
                   {editMode.address ? 'Cancel' : 'Edit'}
@@ -972,57 +972,57 @@ const ProviderProfile = () => {
                   <form onSubmit={(e) => { e.preventDefault(); updateProfile('address'); }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Street</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Street</label>
                         <input
                           type="text"
                           name="street"
                           value={profileData.address.street}
                           onChange={(e) => handleChange(e, 'address')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">City</label>
                         <input
                           type="text"
                           name="city"
                           value={profileData.address.city}
                           onChange={(e) => handleChange(e, 'address')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">State</label>
                         <input
                           type="text"
                           name="state"
                           value={profileData.address.state}
                           onChange={(e) => handleChange(e, 'address')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Postal Code</label>
                         <input
                           type="text"
                           name="postalCode"
                           value={profileData.address.postalCode}
                           onChange={(e) => handleChange(e, 'address')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Country</label>
                         <input
                           type="text"
                           name="country"
                           value={profileData.address.country}
                           onChange={(e) => handleChange(e, 'address')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                     </div>
@@ -1031,13 +1031,13 @@ const ProviderProfile = () => {
                       <button
                         type="button"
                         onClick={() => setEditMode({ ...editMode, address: false })}
-                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       >
                         Save Changes
                       </button>
@@ -1046,28 +1046,28 @@ const ProviderProfile = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Street</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.address.street || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Street</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.address.street || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">City</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.address.city || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">City</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.address.city || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">State</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.address.state || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">State</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.address.state || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.address.postalCode || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Postal Code</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.address.postalCode || 'Not provided'}</p>
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Country</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.address.country || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">Country</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.address.country || 'Not provided'}</p>
                     </div>
                   </div>
                 )}
@@ -1076,12 +1076,12 @@ const ProviderProfile = () => {
 
             {/* Bank Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-blue-900 px-6 py-4 flex justify-between items-center">
+              <div className="bg-primary px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">Bank Information</h2>
                 <button
                   onClick={() => setEditMode({ ...editMode, bank: !editMode.bank })}
                   className={`px-4 py-2 rounded-md text-sm font-medium ${
-                    editMode.bank ? 'bg-white text-blue-600' : 'bg-yellow-400 text-blue-900 hover:bg-yellow-500'
+                    editMode.bank ? 'bg-white text-primary' : 'bg-accent text-white hover:bg-orange-500'
                   }`}
                 >
                   {editMode.bank ? 'Cancel' : 'Edit'}
@@ -1093,24 +1093,24 @@ const ProviderProfile = () => {
                   <form onSubmit={(e) => { e.preventDefault(); updateProfile('bank'); }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">Account Number</label>
                         <input
                           type="text"
                           name="accountNo"
                           value={profileData.bankDetails.accountNo}
                           onChange={(e) => handleChange(e, 'bank')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">IFSC Code</label>
+                        <label className="block text-sm font-medium text-secondary mb-1">IFSC Code</label>
                         <input
                           type="text"
                           name="ifsc"
                           value={profileData.bankDetails.ifsc}
                           onChange={(e) => handleChange(e, 'bank')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                     </div>
@@ -1119,13 +1119,13 @@ const ProviderProfile = () => {
                       <button
                         type="button"
                         onClick={() => setEditMode({ ...editMode, bank: false })}
-                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-secondary bg-white hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       >
                         Save Changes
                       </button>
@@ -1134,8 +1134,8 @@ const ProviderProfile = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">Account Number</h3>
-                      <p className="mt-1 text-sm text-gray-900">
+                      <h3 className="text-sm font-medium text-secondary">Account Number</h3>
+                      <p className="mt-1 text-sm text-secondary">
                         {profileData.bankDetails.accountNo ? 
                           `****${profileData.bankDetails.accountNo.slice(-4)}` : 
                           'Not provided'}
@@ -1143,12 +1143,12 @@ const ProviderProfile = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">IFSC Code</h3>
-                      <p className="mt-1 text-sm text-gray-900">{profileData.bankDetails.ifsc || 'Not provided'}</p>
+                      <h3 className="text-sm font-medium text-secondary">IFSC Code</h3>
+                      <p className="mt-1 text-sm text-secondary">{profileData.bankDetails.ifsc || 'Not provided'}</p>
                     </div>
 
                     <div className="md:col-span-2">
-                      <h3 className="text-sm font-medium text-gray-500">Verification Status</h3>
+                      <h3 className="text-sm font-medium text-secondary">Verification Status</h3>
                       <p className={`mt-1 text-sm font-medium ${
                         profileData.bankDetails.verified ? 'text-green-600' : 'text-yellow-500'
                       }`}>
@@ -1162,7 +1162,7 @@ const ProviderProfile = () => {
 
             {/* Account Actions */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-red-900 px-6 py-4">
+              <div className="bg-red-600 px-6 py-4">
                 <h2 className="text-xl font-semibold text-white">Account Actions</h2>
               </div>
               <div className="p-6">

@@ -1,38 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../store/auth';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  TextField,
-  Button,
-  CircularProgress,
-  Alert,
-  Divider,
-  Chip,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  IconButton,
-  Rating,
-  Badge,
-  Tabs,
-  Tab,
-  Snackbar,
-  Fab,
-  Modal
-} from '@mui/material';
+import { toast } from 'react-toastify';
 import {
   Star as StarIcon,
   Edit as EditIcon,
@@ -48,56 +17,9 @@ import {
   PhotoCamera
 } from '@mui/icons-material';
 import { format, subDays } from 'date-fns';
-import { styled } from '@mui/material/styles';
-
-// Custom styled components
-const StyledRating = styled(Rating)({
-  '& .MuiRating-iconFilled': {
-    color: '#facc15',
-  },
-  '& .MuiRating-iconHover': {
-    color: '#eab308',
-  },
-});
-
-const PrimaryButton = styled(Button)({
-  backgroundColor: '#2563eb',
-  color: 'white',
-  fontWeight: 600,
-  padding: '8px 24px',
-  borderRadius: '12px',
-  textTransform: 'none',
-  '&:hover': {
-    backgroundColor: '#1e40af',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-  },
-  '&:disabled': {
-    backgroundColor: '#bfdbfe'
-  }
-});
-
-const FeedbackCardWrapper = styled(Card)({
-  border: 'none',
-  borderRadius: '16px',
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 8px 25px rgba(0, 0, 0, 0.12)'
-  }
-});
-
-const ImagePreview = styled('img')({
-  width: '100%',
-  height: '150px',
-  objectFit: 'cover',
-  borderRadius: '8px',
-  marginBottom: '8px',
-  cursor: 'pointer'
-});
 
 const FeedbackManagement = () => {
-  const { token, user, API, showToast, isAuthenticated, logoutUser } = useAuth();
+  const { token, user, API, logoutUser } = useAuth();
   const navigate = useNavigate();
   const { feedbackId } = useParams();
 
@@ -111,9 +33,7 @@ const FeedbackManagement = () => {
     providerRating: 5,
     providerComment: '',
     serviceRating: 5,
-    serviceComment: '',
-    beforeServiceImages: [],
-    afterServiceImages: []
+    serviceComment: ''
   });
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingsForFeedback, setBookingsForFeedback] = useState([]);
@@ -124,7 +44,6 @@ const FeedbackManagement = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [imagePreview, setImagePreview] = useState(null);
 
   // Fetch customer's feedbacks
   const fetchFeedbacks = async () => {
@@ -180,9 +99,7 @@ const FeedbackManagement = () => {
         providerRating: data.data.providerFeedback.rating,
         providerComment: data.data.providerFeedback.comment || '',
         serviceRating: data.data.serviceFeedback.rating,
-        serviceComment: data.data.serviceFeedback.comment || '',
-        beforeServiceImages: data.data.beforeServiceImages || [],
-        afterServiceImages: data.data.afterServiceImages || []
+        serviceComment: data.data.serviceFeedback.comment || ''
       });
     } catch (err) {
       setError(err.message);
@@ -239,33 +156,6 @@ const FeedbackManagement = () => {
     }));
   };
 
-  // Handle image upload
-  const handleImageUpload = async (e, type) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    // In a real app, you would upload these to a storage service
-    // For demo purposes, we'll just create object URLs
-    const imageUrls = files.map(file => URL.createObjectURL(file));
-
-    setFormData(prev => ({
-      ...prev,
-      [type]: [...prev[type], ...imageUrls]
-    }));
-  };
-
-  // Remove image
-  const handleRemoveImage = (type, index) => {
-    setFormData(prev => {
-      const updatedImages = [...prev[type]];
-      updatedImages.splice(index, 1);
-      return {
-        ...prev,
-        [type]: updatedImages
-      };
-    });
-  };
-
   // Submit new feedback
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
@@ -283,9 +173,7 @@ const FeedbackManagement = () => {
         providerRating: formData.providerRating,
         providerComment: formData.providerComment,
         serviceRating: formData.serviceRating,
-        serviceComment: formData.serviceComment,
-        beforeServiceImages: formData.beforeServiceImages,
-        afterServiceImages: formData.afterServiceImages
+        serviceComment: formData.serviceComment
       };
 
       const response = await fetch(`${API}/feedback`, {
@@ -309,9 +197,7 @@ const FeedbackManagement = () => {
         providerRating: 5,
         providerComment: '',
         serviceRating: 5,
-        serviceComment: '',
-        beforeServiceImages: [],
-        afterServiceImages: []
+        serviceComment: ''
       });
       fetchFeedbacks();
     } catch (err) {
@@ -331,9 +217,7 @@ const FeedbackManagement = () => {
         providerRating: formData.providerRating,
         providerComment: formData.providerComment,
         serviceRating: formData.serviceRating,
-        serviceComment: formData.serviceComment,
-        beforeServiceImages: formData.beforeServiceImages,
-        afterServiceImages: formData.afterServiceImages
+        serviceComment: formData.serviceComment
       };
 
       const response = await fetch(`${API}/feedback/edit/${editingFeedback._id}`, {
@@ -367,9 +251,7 @@ const FeedbackManagement = () => {
       providerRating: feedback.providerFeedback.rating,
       providerComment: feedback.providerFeedback.comment || '',
       serviceRating: feedback.serviceFeedback.rating,
-      serviceComment: feedback.serviceFeedback.comment || '',
-      beforeServiceImages: feedback.beforeServiceImages || [],
-      afterServiceImages: feedback.afterServiceImages || []
+      serviceComment: feedback.serviceFeedback.comment || ''
     });
     setOpenEditModal(true);
   };
@@ -395,13 +277,13 @@ const FeedbackManagement = () => {
 
   // Initialize component
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!user) {
       navigate('/login');
       return;
     }
 
     fetchFeedbacks();
-  }, [isAuthenticated]);
+  }, [user]);
 
   // Fetch eligible bookings whenever feedbacks change
   useEffect(() => {
@@ -419,649 +301,499 @@ const FeedbackManagement = () => {
 
   // Feedback form component
   const FeedbackForm = ({ isEdit = false }) => (
-    <Box component="form" onSubmit={isEdit ? handleUpdateFeedback : handleSubmitFeedback}>
-      <Grid container spacing={3}>
+    <form onSubmit={isEdit ? handleUpdateFeedback : handleSubmitFeedback} className="space-y-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Service Feedback Section */}
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1e3a8a' }}>
-            <WorkIcon sx={{ verticalAlign: 'middle', mr: 1, color: '#2563eb' }} />
+        <div>
+          <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center">
+            <WorkIcon className="mr-2 text-primary" />
             Rate the Service
-          </Typography>
-          <Paper sx={{ p: 3, backgroundColor: '#ffffff', borderRadius: '12px' }}>
-            <Box mb={3}>
-              <Typography component="legend" variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
+          </h3>
+          <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+            <div className="mb-4">
+              <p className="text-sm font-medium text-secondary mb-2">
                 How satisfied are you with the service?
-              </Typography>
-              <StyledRating
-                name="serviceRating"
-                value={Number(formData.serviceRating) || 5}
-                precision={0.5}
-                onChange={(event, newValue) => handleRatingChange('serviceRating', newValue || 5)}
-                icon={<StarIcon fontSize="inherit" />}
-                emptyIcon={<StarIcon fontSize="inherit" style={{ opacity: 0.3 }} />}
-                size="large"
-              />
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {formData.serviceRating} out of 5 stars
-              </Typography>
-            </Box>
+              </p>
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleRatingChange('serviceRating', star)}
+                    className="focus:outline-none"
+                  >
+                    <StarIcon
+                      className={`h-8 w-8 ${star <= formData.serviceRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm font-medium text-secondary">
+                  {formData.serviceRating} out of 5
+                </span>
+              </div>
+            </div>
             
-            <TextField
-              fullWidth
-              label="Share your experience (optional)"
-              name="serviceComment"
-              value={formData.serviceComment}
-              onChange={handleInputChange}
-              multiline
-              rows={3}
-              variant="outlined"
-              placeholder="Tell us what you liked or didn't like about the service..."
-              inputProps={{ maxLength: 500 }}
-              helperText={`${formData.serviceComment.length}/500 characters`}
-              sx={{ mb: 2 }}
-            />
-
-            {/* Before Service Images */}
-            <Box mb={3}>
-              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 500 }}>
-                Upload "Before Service" Photos (Max 5)
-              </Typography>
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="before-service-upload"
-                type="file"
-                multiple
-                onChange={(e) => handleImageUpload(e, 'beforeServiceImages')}
-                disabled={formData.beforeServiceImages.length >= 5}
-              />
-              <label htmlFor="before-service-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<PhotoCamera />}
-                  disabled={formData.beforeServiceImages.length >= 5}
-                >
-                  Add Before Photos
-                </Button>
+            <div>
+              <label htmlFor="serviceComment" className="block text-sm font-medium text-secondary mb-2">
+                Share your experience (optional)
               </label>
-              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                Upload photos showing the condition before service was performed
-              </Typography>
-              
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {formData.beforeServiceImages.map((img, index) => (
-                  <Grid item xs={6} sm={4} md={3} key={index}>
-                    <Box position="relative">
-                      <ImagePreview 
-                        src={img} 
-                        alt={`Before service ${index + 1}`}
-                        onClick={() => setImagePreview(img)}
-                      />
-                      <IconButton
-                        size="small"
-                        sx={{ 
-                          position: 'absolute', 
-                          top: 0, 
-                          right: 0,
-                          backgroundColor: 'rgba(0,0,0,0.5)',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0,0,0,0.7)'
-                          }
-                        }}
-                        onClick={() => handleRemoveImage('beforeServiceImages', index)}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-
-            {/* After Service Images */}
-            <Box mb={3}>
-              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 500 }}>
-                Upload "After Service" Photos (Max 5)
-              </Typography>
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="after-service-upload"
-                type="file"
-                multiple
-                onChange={(e) => handleImageUpload(e, 'afterServiceImages')}
-                disabled={formData.afterServiceImages.length >= 5}
+              <textarea
+                id="serviceComment"
+                name="serviceComment"
+                value={formData.serviceComment}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Tell us what you liked or didn't like about the service..."
+                maxLength={500}
               />
-              <label htmlFor="after-service-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<PhotoCamera />}
-                  disabled={formData.afterServiceImages.length >= 5}
-                >
-                  Add After Photos
-                </Button>
-              </label>
-              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                Upload photos showing the condition after service was completed
-              </Typography>
-              
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {formData.afterServiceImages.map((img, index) => (
-                  <Grid item xs={6} sm={4} md={3} key={index}>
-                    <Box position="relative">
-                      <ImagePreview 
-                        src={img} 
-                        alt={`After service ${index + 1}`}
-                        onClick={() => setImagePreview(img)}
-                      />
-                      <IconButton
-                        size="small"
-                        sx={{ 
-                          position: 'absolute', 
-                          top: 0, 
-                          right: 0,
-                          backgroundColor: 'rgba(0,0,0,0.5)',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0,0,0,0.7)'
-                          }
-                        }}
-                        onClick={() => handleRemoveImage('afterServiceImages', index)}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Paper>
-        </Grid>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.serviceComment.length}/500 characters
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Provider Feedback Section */}
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1e3a8a' }}>
-            <PersonIcon sx={{ verticalAlign: 'middle', mr: 1, color: '#2563eb' }} />
+        <div>
+          <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center">
+            <PersonIcon className="mr-2 text-primary" />
             Rate the Service Provider
-          </Typography>
-          <Paper sx={{ p: 3, backgroundColor: '#ffffff', borderRadius: '12px' }}>
-            <Box mb={3}>
-              <Typography component="legend" variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
+          </h3>
+          <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+            <div className="mb-4">
+              <p className="text-sm font-medium text-secondary mb-2">
                 How would you rate the provider's service?
-              </Typography>
-              <StyledRating
-                name="providerRating"
-                value={Number(formData.providerRating) || 5}
-                precision={0.5}
-                onChange={(event, newValue) => handleRatingChange('providerRating', newValue || 5)}
-                icon={<StarIcon fontSize="inherit" />}
-                emptyIcon={<StarIcon fontSize="inherit" style={{ opacity: 0.3 }} />}
-                size="large"
-              />
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {formData.providerRating} out of 5 stars
-              </Typography>
-            </Box>
+              </p>
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleRatingChange('providerRating', star)}
+                    className="focus:outline-none"
+                  >
+                    <StarIcon
+                      className={`h-8 w-8 ${star <= formData.providerRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm font-medium text-secondary">
+                  {formData.providerRating} out of 5
+                </span>
+              </div>
+            </div>
             
-            <TextField
-              fullWidth
-              label="Tell us about the provider (optional)"
-              name="providerComment"
-              value={formData.providerComment}
-              onChange={handleInputChange}
-              multiline
-              rows={3}
-              variant="outlined"
-              placeholder="Was the provider professional, punctual, and helpful?"
-              inputProps={{ maxLength: 500 }}
-              helperText={`${formData.providerComment.length}/500 characters`}
-            />
-          </Paper>
-        </Grid>
+            <div>
+              <label htmlFor="providerComment" className="block text-sm font-medium text-secondary mb-2">
+                Tell us about the provider (optional)
+              </label>
+              <textarea
+                id="providerComment"
+                name="providerComment"
+                value={formData.providerComment}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Was the provider professional, punctual, and helpful?"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.providerComment.length}/500 characters
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Action Buttons */}
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
-              onClick={() => isEdit ? setOpenEditModal(false) : setOpenDialog(false)}
-              disabled={isSubmitting}
-              sx={{ borderRadius: '12px' }}
-            >
-              Cancel
-            </Button>
-            <PrimaryButton
-              type="submit"
-              disabled={isSubmitting}
-              startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
-            >
-              {isSubmitting ? 'Submitting...' : isEdit ? 'Update Review' : 'Submit Review'}
-            </PrimaryButton>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={() => isEdit ? setOpenEditModal(false) : setOpenDialog(false)}
+            disabled={isSubmitting}
+            className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-secondary bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+          >
+            {isSubmitting ? 'Submitting...' : isEdit ? 'Update Review' : 'Submit Review'}
+          </button>
+        </div>
+      </div>
+    </form>
   );
 
   // Feedback card component
   const FeedbackCard = ({ feedback }) => (
-    <FeedbackCardWrapper sx={{ mb: 3 }}>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-          <Box>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              {feedback.serviceFeedback?.service?.title || 'Service'}
-            </Typography>
-            <Box display="flex" alignItems="center" gap={1}>
-              <CalendarIcon sx={{ fontSize: '1rem' }} />
-              <Typography variant="body2">
-                {format(new Date(feedback.booking?.date || feedback.createdAt), 'MMM dd, yyyy')}
-              </Typography>
-            </Box>
-          </Box>
-          <Box display="flex" gap={1}>
-            <Chip
-              label={format(new Date(feedback.createdAt), 'MMM dd, yyyy')}
-              size="small"
-              variant="outlined"
-            />
-            {canEditFeedback(feedback) && (
-              <Chip
-                label="Editable"
-                size="small"
-                color="success"
-              />
-            )}
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Grid container spacing={3}>
-          {/* Service Rating */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-              Service Review
-            </Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <StyledRating
-                value={feedback.serviceFeedback?.rating || 0}
-                precision={0.5}
-                readOnly
-                icon={<StarIcon fontSize="inherit" />}
-                emptyIcon={<StarIcon fontSize="inherit" style={{ opacity: 0.3 }} />}
-              />
-              <Typography variant="body1" sx={{ ml: 1, fontWeight: 500 }}>
-                {feedback.serviceFeedback?.rating?.toFixed(1) || 'N/A'}
-              </Typography>
-            </Box>
-            
-            {feedback.serviceFeedback?.comment && (
-              <Typography variant="body2" sx={{ mt: 1, backgroundColor: '#f5f5f5', p: 2, borderRadius: '8px' }}>
-                "{feedback.serviceFeedback.comment}"
-              </Typography>
-            )}
-
-            {/* Service Images */}
-            {(feedback.beforeServiceImages?.length > 0 || feedback.afterServiceImages?.length > 0) && (
-              <Box mt={3}>
-                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 500 }}>
-                  Service Photos
-                </Typography>
-                
-                {feedback.beforeServiceImages?.length > 0 && (
-                  <Box mb={2}>
-                    <Typography variant="caption" display="block" sx={{ mb: 1 }}>
-                      Before Service
-                    </Typography>
-                    <Grid container spacing={1}>
-                      {feedback.beforeServiceImages.map((img, index) => (
-                        <Grid item xs={4} key={`before-${index}`}>
-                          <ImagePreview 
-                            src={img} 
-                            alt={`Before service ${index + 1}`}
-                            onClick={() => setImagePreview(img)}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Box>
-                )}
-                
-                {feedback.afterServiceImages?.length > 0 && (
-                  <Box>
-                    <Typography variant="caption" display="block" sx={{ mb: 1 }}>
-                      After Service
-                    </Typography>
-                    <Grid container spacing={1}>
-                      {feedback.afterServiceImages.map((img, index) => (
-                        <Grid item xs={4} key={`after-${index}`}>
-                          <ImagePreview 
-                            src={img} 
-                            alt={`After service ${index + 1}`}
-                            onClick={() => setImagePreview(img)}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Box>
-                )}
-              </Box>
-            )}
-          </Grid>
-
-          {/* Provider Rating */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-              Provider Review
-            </Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <StyledRating
-                value={feedback.providerFeedback?.rating || 0}
-                precision={0.5}
-                readOnly
-                icon={<StarIcon fontSize="inherit" />}
-                emptyIcon={<StarIcon fontSize="inherit" style={{ opacity: 0.3 }} />}
-              />
-              <Typography variant="body1" sx={{ ml: 1, fontWeight: 500 }}>
-                {feedback.providerFeedback?.rating?.toFixed(1) || 'N/A'}
-              </Typography>
-            </Box>
-            
-            {feedback.providerFeedback?.comment && (
-              <Typography variant="body2" sx={{ mt: 1, backgroundColor: '#f5f5f5', p: 2, borderRadius: '8px' }}>
-                "{feedback.providerFeedback.comment}"
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
-
-        {/* Action Buttons */}
-        <Box mt={3} display="flex" justifyContent="flex-end" gap={1}>
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6 mb-4 transition-all hover:shadow-lg">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+        <div>
+          <h3 className="text-xl font-semibold text-secondary">
+            {feedback.serviceFeedback?.service?.title || 'Service'}
+          </h3>
+          <div className="flex items-center mt-1 text-sm text-gray-600">
+            <CalendarIcon className="h-4 w-4 mr-1" />
+            <span>{format(new Date(feedback.booking?.date || feedback.createdAt), 'MMM dd, yyyy')}</span>
+          </div>
+        </div>
+        <div className="flex space-x-2 mt-2 md:mt-0">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            {format(new Date(feedback.createdAt), 'MMM dd, yyyy')}
+          </span>
           {canEditFeedback(feedback) && (
-            <PrimaryButton
-              size="medium"
-              startIcon={<EditIcon />}
-              onClick={() => handleOpenEditModal(feedback)}
-            >
-              Edit
-            </PrimaryButton>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Editable
+            </span>
           )}
-        </Box>
-      </CardContent>
-    </FeedbackCardWrapper>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 my-4"></div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Service Rating */}
+        <div>
+          <h4 className="text-md font-semibold text-secondary mb-2">
+            Service Review
+          </h4>
+          <div className="flex items-center mb-2">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <StarIcon
+                  key={star}
+                  className={`h-5 w-5 ${star <= (feedback.serviceFeedback?.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+            <span className="ml-2 text-sm font-medium text-secondary">
+              {feedback.serviceFeedback?.rating?.toFixed(1) || 'N/A'}
+            </span>
+          </div>
+          
+          {feedback.serviceFeedback?.comment && (
+            <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md mt-2">
+              "{feedback.serviceFeedback.comment}"
+            </p>
+          )}
+        </div>
+
+        {/* Provider Rating */}
+        <div>
+          <h4 className="text-md font-semibold text-secondary mb-2">
+            Provider Review
+          </h4>
+          <div className="flex items-center mb-2">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <StarIcon
+                  key={star}
+                  className={`h-5 w-5 ${star <= (feedback.providerFeedback?.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+            <span className="ml-2 text-sm font-medium text-secondary">
+              {feedback.providerFeedback?.rating?.toFixed(1) || 'N/A'}
+            </span>
+          </div>
+          
+          {feedback.providerFeedback?.comment && (
+            <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md mt-2">
+              "{feedback.providerFeedback.comment}"
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      {canEditFeedback(feedback) && (
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => handleOpenEditModal(feedback)}
+            className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90"
+          >
+            <EditIcon className="h-4 w-4 mr-1" />
+            Edit
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   // Booking selection dialog
   const BookingSelectionDialog = () => (
-    <Dialog open={openBookingDialog} onClose={() => setOpenBookingDialog(false)} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>
-        Select Booking to Review
-      </DialogTitle>
-      <DialogContent>
-        {bookingsForFeedback.length === 0 ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom>
-              No Bookings Available for Review
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 3 }}>
-              You've either reviewed all your completed bookings or don't have any bookings ready for review yet.
-            </Typography>
-          </Box>
-        ) : (
-          <List>
-            {bookingsForFeedback.map(booking => (
-              <Card 
-                key={booking._id}
-                onClick={() => handleBookingSelect(booking)}
-                sx={{ mb: 2, cursor: 'pointer' }}
-              >
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Avatar
-                      src={booking.services?.[0]?.service?.image || ''}
-                      sx={{ width: 56, height: 56 }}
-                    >
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${openBookingDialog ? 'block' : 'hidden'}`}>
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-secondary">
+            Select Booking to Review
+          </h3>
+        </div>
+        <div className="p-6 max-h-96 overflow-y-auto">
+          {bookingsForFeedback.length === 0 ? (
+            <div className="text-center py-4">
+              <h4 className="text-md font-semibold text-secondary mb-2">
+                No Bookings Available for Review
+              </h4>
+              <p className="text-sm text-gray-600">
+                You've either reviewed all your completed bookings or don't have any bookings ready for review yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {bookingsForFeedback.map(booking => (
+                <div 
+                  key={booking._id}
+                  onClick={() => handleBookingSelect(booking)}
+                  className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-12 w-12 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
                       {booking.services?.[0]?.service?.title?.charAt(0) || 'S'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="text-sm font-semibold text-secondary">
                         {booking.services?.[0]?.service?.title || 'Service'}
-                      </Typography>
-                      <Typography variant="body2">
+                      </h4>
+                      <p className="text-sm text-gray-600">
                         {format(new Date(booking.date), 'MMM dd, yyyy')}
-                      </Typography>
-                      <Typography variant="body2">
+                      </p>
+                      <p className="text-sm text-gray-600">
                         Provider: {booking.provider?.name || 'Unknown'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </List>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setOpenBookingDialog(false)}>
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+          <button
+            onClick={() => setOpenBookingDialog(false)}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-secondary bg-white hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   // Feedback submission dialog
   const FeedbackSubmissionDialog = () => (
-    <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>
-        <Box display="flex" alignItems="center">
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${openDialog ? 'block' : 'hidden'}`}>
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center">
+            {selectedBooking && (
+              <button 
+                onClick={() => {
+                  setOpenDialog(false);
+                  setOpenBookingDialog(true);
+                }}
+                className="mr-2 text-gray-500 hover:text-gray-700"
+              >
+                <ArrowBackIcon />
+              </button>
+            )}
+            <h3 className="text-lg font-semibold text-secondary">
+              {selectedBooking ? `Review for ${selectedBooking.services?.[0]?.service?.title}` : 'Submit Feedback'}
+            </h3>
+          </div>
           {selectedBooking && (
-            <IconButton edge="start" onClick={() => {
-              setOpenDialog(false);
-              setOpenBookingDialog(true);
-            }}>
-              <ArrowBackIcon />
-            </IconButton>
+            <p className="text-sm text-gray-600 mt-1">
+              Booking Date: {format(new Date(selectedBooking.date), 'MMM dd, yyyy')}
+            </p>
           )}
-          {selectedBooking ? `Review for ${selectedBooking.services?.[0]?.service?.title}` : 'Submit Feedback'}
-        </Box>
-        {selectedBooking && (
-          <Typography variant="body2">
-            Booking Date: {format(new Date(selectedBooking.date), 'MMM dd, yyyy')}
-          </Typography>
-        )}
-      </DialogTitle>
-      <DialogContent>
-        <FeedbackForm />
-      </DialogContent>
-    </Dialog>
+        </div>
+        <div className="p-6">
+          <FeedbackForm />
+        </div>
+      </div>
+    </div>
   );
 
   // Edit feedback modal
   const EditFeedbackModal = () => (
-    <Modal
-      open={openEditModal}
-      onClose={() => setOpenEditModal(false)}
-      aria-labelledby="edit-feedback-modal"
-      aria-describedby="edit-feedback-form"
-    >
-      <Box sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '80%',
-        maxWidth: 900,
-        bgcolor: 'background.paper',
-        boxShadow: 24,
-        p: 4,
-        borderRadius: '16px',
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography id="edit-feedback-modal" variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${openEditModal ? 'block' : 'hidden'}`}>
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-secondary">
             Edit Your Review
-          </Typography>
-          <IconButton onClick={() => setOpenEditModal(false)}>
+          </h3>
+          <button
+            onClick={() => setOpenEditModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <CloseIcon />
-          </IconButton>
-        </Box>
-        
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          You can update your review within 7 days of submission.
-        </Typography>
-        
-        <Paper sx={{ p: 4, borderRadius: '12px' }}>
-          <FeedbackForm isEdit />
-        </Paper>
-      </Box>
-    </Modal>
+          </button>
+        </div>
+        <div className="p-6">
+          <p className="text-sm text-gray-600 mb-4">
+            You can update your review within 7 days of submission.
+          </p>
+          <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg border border-gray-200">
+            <FeedbackForm isEdit />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
-  // Image preview modal
-  const ImagePreviewModal = () => (
-    <Dialog
-      open={!!imagePreview}
-      onClose={() => setImagePreview(null)}
-      maxWidth="md"
-    >
-      <DialogContent>
-        <img 
-          src={imagePreview} 
-          alt="Preview" 
-          style={{ 
-            width: '100%', 
-            height: 'auto',
-            maxHeight: '80vh',
-            objectFit: 'contain'
-          }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setImagePreview(null)}>Close</Button>
-      </DialogActions>
-    </Dialog>
+  // Snackbar notification
+  const SnackbarNotification = () => (
+    <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300 ${snackbarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`px-4 py-3 rounded-md shadow-md ${
+        snackbarSeverity === 'error' ? 'bg-red-100 text-red-800' : 
+        snackbarSeverity === 'warning' ? 'bg-yellow-100 text-yellow-800' : 
+        'bg-green-100 text-green-800'
+      }`}>
+        <div className="flex items-center">
+          <span className="mr-2">
+            {snackbarSeverity === 'error' ? '❌' : 
+             snackbarSeverity === 'warning' ? '⚠️' : '✅'}
+          </span>
+          <span>{snackbarMessage}</span>
+          <button
+            onClick={handleSnackbarClose}
+            className="ml-4 text-gray-500 hover:text-gray-700"
+          >
+            <CloseIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-      <Box mb={4}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-          My Reviews
-        </Typography>
-        <Typography variant="body1">
-          Manage your service and provider reviews
-        </Typography>
-      </Box>
+    <div className="min-h-screen bg-transparent py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-secondary">
+            My Reviews
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Manage your service and provider reviews
+          </p>
+        </div>
 
-      <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-        <Tab label="All Reviews" sx={{ textTransform: 'none', fontWeight: 600 }} />
-        <Tab label="Editable" sx={{ textTransform: 'none', fontWeight: 600 }} />
-      </Tabs>
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab(0)}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 0
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              All Reviews
+            </button>
+            <button
+              onClick={() => setActiveTab(1)}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 1
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Editable
+            </button>
+          </nav>
+        </div>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      ) : (
-        <>
-          {activeTab === 0 && feedbacks.length === 0 && (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" gutterBottom>
-                No Reviews Yet
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 3 }}>
-                You haven't reviewed any of your completed bookings. Share your experience to help others.
-              </Typography>
-              <PrimaryButton 
-                onClick={() => setOpenBookingDialog(true)}
-                startIcon={<EditIcon />}
-              >
-                Write Your First Review
-              </PrimaryButton>
-            </Paper>
-          )}
+        {loading ? (
+          <div className="flex justify-center my-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
+          </div>
+        ) : (
+          <>
+            {activeTab === 0 && feedbacks.length === 0 && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
+                <h3 className="text-lg font-semibold text-secondary mb-2">
+                  No Reviews Yet
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  You haven't reviewed any of your completed bookings. Share your experience to help others.
+                </p>
+                <button
+                  onClick={() => setOpenBookingDialog(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90"
+                >
+                  <EditIcon className="h-4 w-4 mr-1" />
+                  Write Your First Review
+                </button>
+              </div>
+            )}
 
-          {activeTab === 1 && feedbacks.filter(f => canEditFeedback(f)).length === 0 && (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" gutterBottom>
-                No Editable Reviews
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 3 }}>
-                You don't have any reviews that can be edited. Reviews can only be edited within 7 days of submission.
-              </Typography>
-            </Paper>
-          )}
+            {activeTab === 1 && feedbacks.filter(f => canEditFeedback(f)).length === 0 && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8 text-center">
+                <h3 className="text-lg font-semibold text-secondary mb-2">
+                  No Editable Reviews
+                </h3>
+                <p className="text-gray-600">
+                  You don't have any reviews that can be edited. Reviews can only be edited within 7 days of submission.
+                </p>
+              </div>
+            )}
 
-          {(activeTab === 0 && feedbacks.length > 0) && (
-            <Box>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                All Reviews ({feedbacks.length})
-              </Typography>
-              {feedbacks.map(feedback => (
-                <FeedbackCard key={feedback._id} feedback={feedback} />
-              ))}
-            </Box>
-          )}
-
-          {(activeTab === 1 && feedbacks.filter(f => canEditFeedback(f)).length > 0) && (
-            <Box>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Editable Reviews ({feedbacks.filter(f => canEditFeedback(f)).length})
-              </Typography>
-              {feedbacks
-                .filter(f => canEditFeedback(f))
-                .map(feedback => (
+            {(activeTab === 0 && feedbacks.length > 0) && (
+              <div>
+                <h3 className="text-lg font-semibold text-secondary mb-4">
+                  All Reviews ({feedbacks.length})
+                </h3>
+                {feedbacks.map(feedback => (
                   <FeedbackCard key={feedback._id} feedback={feedback} />
                 ))}
-            </Box>
-          )}
-        </>
-      )}
+              </div>
+            )}
 
-      <BookingSelectionDialog />
-      <FeedbackSubmissionDialog />
-      <EditFeedbackModal />
-      <ImagePreviewModal />
+            {(activeTab === 1 && feedbacks.filter(f => canEditFeedback(f)).length > 0) && (
+              <div>
+                <h3 className="text-lg font-semibold text-secondary mb-4">
+                  Editable Reviews ({feedbacks.filter(f => canEditFeedback(f)).length})
+                </h3>
+                {feedbacks
+                  .filter(f => canEditFeedback(f))
+                  .map(feedback => (
+                    <FeedbackCard key={feedback._id} feedback={feedback} />
+                  ))}
+              </div>
+            )}
+          </>
+        )}
 
-      <Fab
-        color="primary"
-        aria-label="add review"
-        sx={{ position: 'fixed', bottom: 32, right: 32, display: { xs: 'flex', md: 'none' } }}
-        onClick={() => setOpenBookingDialog(true)}
-      >
-        <AddIcon />
-      </Fab>
+        <BookingSelectionDialog />
+        <FeedbackSubmissionDialog />
+        <EditFeedbackModal />
+        <SnackbarNotification />
 
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <PrimaryButton
-          startIcon={<EditIcon />}
+        {/* Floating action button for mobile */}
+        <button
           onClick={() => setOpenBookingDialog(true)}
-          sx={{ position: 'fixed', bottom: 32, right: 32 }}
+          className="fixed bottom-8 right-8 md:hidden w-14 h-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
         >
-          Write Review
-        </PrimaryButton>
-      </Box>
+          <AddIcon className="h-6 w-6" />
+        </button>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Container>
+        {/* Desktop button */}
+        <button
+          onClick={() => setOpenBookingDialog(true)}
+          className="fixed bottom-8 right-8 hidden md:inline-flex items-center px-4 py-3 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        >
+          <EditIcon className="h-5 w-5 mr-1" />
+          Write Review
+        </button>
+      </div>
+    </div>
   );
 };
 
