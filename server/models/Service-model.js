@@ -59,7 +59,6 @@ const serviceSchema = new Schema({
       type: Number,
       min: 1,
       max: 5,
-      required: true
     },
     comment: {
       type: String,
@@ -74,7 +73,7 @@ const serviceSchema = new Schema({
     },
     feedbackId: {
       type: Schema.Types.ObjectId,
-      required: true
+      ref: 'Feedback',
     },
     createdAt: {
       type: Date,

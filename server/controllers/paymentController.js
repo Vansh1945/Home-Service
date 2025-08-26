@@ -797,7 +797,7 @@ const getAllProviderEarnings = async (req, res) => {
         .limit(limitNum)
         .populate('provider', 'name email')
         .populate('booking', 'service date')
-        .populate('commissionRule', 'name type value')
+        // .populate('commissionRule', 'name type value')
         .select('grossAmount commissionAmount netAmount status createdAt'),
       ProviderEarning.countDocuments(filter)
     ]);

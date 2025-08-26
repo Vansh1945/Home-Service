@@ -95,11 +95,6 @@ const getAllCoupons = async (req, res) => {
 // Update coupon
 const updateCoupon = async (req, res) => {
   try {
-    // Validate request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
 
     const { id } = req.params;
     const updateData = req.body;

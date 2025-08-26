@@ -185,9 +185,9 @@ const ServiceListingPage = () => {
     const isServiceAvailable = service.isActive !== false;
 
     return (
-      <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg overflow-hidden">
+      <div className="flex flex-col h-full bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
         {/* Service Image */}
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-48 overflow-hidden flex-shrink-0">
           <img
             src={imageUrl}
             alt={service.title || 'Service'}
@@ -208,7 +208,7 @@ const ServiceListingPage = () => {
         </div>
 
         {/* Service Details */}
-        <div className="p-5">
+        <div className="flex flex-col flex-grow p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-primary bg-primary/20 backdrop-blur-sm px-3 py-1 rounded-full">
               {service.category}
@@ -224,10 +224,10 @@ const ServiceListingPage = () => {
             )}
           </div>
 
-          <h3 className="font-bold text-secondary mb-2 line-clamp-2 text-lg">
+          <h3 className="font-bold text-secondary mb-2 line-clamp-2 text-lg min-h-[56px]">
             {service.title}
           </h3>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">
             {service.description}
           </p>
 
@@ -259,7 +259,7 @@ const ServiceListingPage = () => {
           </div>
 
           {/* Price and Book Button */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-auto">
             <div className="flex items-end gap-1">
               <IndianRupee className="w-5 h-5 text-secondary" />
               <span className="text-xl font-bold text-secondary">
@@ -475,11 +475,11 @@ const ServiceListingPage = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 px-4 sm:px-6 lg:px-8">
             {filteredServices.map((service, index) => (
               <div
                 key={service._id}
-                className="animate-fade-in"
+                className="animate-fade-in h-full"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <ServiceCard service={service} />
